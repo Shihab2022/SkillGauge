@@ -121,6 +121,22 @@ export const endpoints = {
     byId: (noteId: string) => `/notes/${noteId}`,
   },
 
+  resumes: {
+    scoringModel: "/resumes/scoring-model",
+    list: "/resumes",
+    byId: (id: string) => `/resumes/${id}`,
+    duplicate: (id: string) => `/resumes/${id}/duplicate`,
+    versions: (id: string) => `/resumes/${id}/versions`,
+    shared: (slug: string) => `/resumes/shared/${slug}`,
+    analyses: "/resumes/analyses/list",
+    analyze: "/resumes/analyses",
+    analysisById: (id: string) => `/resumes/analyses/${id}`,
+    jobs: "/resumes/jobs/list",
+    jobById: (id: string) => `/resumes/jobs/${id}`,
+    assist: "/resumes/ai/assist",
+    fetchUrl: "/resumes/fetch-url",
+  },
+
   notifications: {
     list: "/notifications",
     unreadCount: "/notifications/unread-count",

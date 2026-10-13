@@ -275,6 +275,10 @@ model User {
   interviewsCreated Interview[]       @relation("InterviewCreator")
   interviewSessions InterviewSession[] @relation("InterviewCandidate")
 
+  resumes          Resume[]
+  jobDescriptions  JobDescription[]
+  resumeAnalyses   ResumeAnalysis[]
+
   @@index([role])
   @@index([status])
   @@index([companyId])
@@ -1042,5 +1046,129 @@ model InterviewViolation {
   @@index([sessionId])
   @@index([type])
   @@index([severity])
+}
+
+// ----------------------------- Resume builder & ATS analyzer -----------------------------
+
+enum ResumeStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum AnalysisSource {
+  BUILDER
+  UPLOAD
+  URL
+}
+
+enum AnalysisStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+/// A structured resume owned by a user. `content` holds validated JSON (see
+/// server/src/modules/resumes/resume.validation.ts for the shape).
+model Resume {
+  id             String       @id @default(uuid())
+  ownerId        String
+  owner          User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  title          String
+  /// Target role label, e.g. "Full-Stack Engineer".
+  targetRole     String?
+  content        Json
+  /// Template id from the frontend template registry (e.g. "ats-classic-01").
+  templateId     String       @default("ats-classic-01")
+  /// Font / accent color / spacing / section order overrides.
+  customization  Json?
+  status         ResumeStatus @default(DRAFT)
+  /// Soft-delete so accidental deletes are recoverable.
+  deletedAt      DateTime?
+  /// Shareable public link controls.
+  publicSlug     String?      @unique
+  isPublic       Boolean      @default(false)
+  /// Denormalized latest ATS score for dashboard display.
+  latestScore    Int?
+  lastAnalyzedAt DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  versions ResumeVersion[]
+  analyses ResumeAnalysis[]
+
+  @@index([ownerId])
+  @@index([ownerId, updatedAt])
+  @@index([status])
+  @@index([deletedAt])
+}
+
+/// Immutable snapshot created on demand or automatically on significant edits.
+model ResumeVersion {
+  id        String   @id @default(uuid())
+  resumeId  String
+  resume    Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  version   Int
+  content   Json
+  templateId String?
+  /// Short human label, e.g. "Before tailoring to Acme Corp".
+  label     String?
+  createdAt DateTime @default(now())
+
+  @@unique([resumeId, version])
+  @@index([resumeId])
+}
+
+/// A saved job description used for resume-vs-job matching.
+model JobDescription {
+  id          String    @id @default(uuid())
+  ownerId     String
+  owner       User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  title       String
+  company     String?
+  description String
+  sourceUrl   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  analyses ResumeAnalysis[]
+
+  @@index([ownerId])
+  @@index([deletedAt])
+}
+
+/// A persisted ATS/content analysis report. AI-generated part is stored in
+/// `report`; `score` + `categoryScores` are denormalized for dashboards.
+model ResumeAnalysis {
+  id              String         @id @default(uuid())
+  ownerId         String
+  owner           User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  resumeId        String?
+  resume          Resume?        @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+  jobDescriptionId String?
+  jobDescription  JobDescription? @relation(fields: [jobDescriptionId], references: [id], onDelete: SetNull)
+  source          AnalysisSource @default(BUILDER)
+  status          AnalysisStatus @default(PENDING)
+  /// Extracted plain text analysed (truncated server-side).
+  resumeText      String?
+  /// Original file metadata for uploads.
+  fileName        String?
+  fileMime        String?
+  sourceUrl       String?
+  /// 0..100 overall score.
+  score           Int?
+  categoryScores  Json?
+  /// Full structured report (ATS, content, keywords, sections, action plan).
+  report          Json?
+  /// "openai" | "deterministic" — which engine produced the report.
+  provider        String?
+  error           String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([ownerId])
+  @@index([resumeId])
+  @@index([status])
 }
 

@@ -254,3 +254,122 @@
     break-inside: avoid;
   }
 }
+
+/* ------------------------------------------------------------------
+   Resume documents — exact A4 (210 x 297mm), print + PDF export
+   ------------------------------------------------------------------ */
+.resume-doc {
+  --accent: #1e3a5f;
+  background: #ffffff;
+  color: #111827;
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  padding: 14mm 15mm;
+  box-shadow: 0 1px 3px hsl(222 47% 11% / 0.12);
+}
+
+.resume-doc.for-print {
+  box-shadow: none;
+  margin: 0;
+}
+
+.resume-doc .resume-header h1 {
+  font-size: 24px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.resume-doc .resume-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  margin: 2px 0 4px;
+}
+
+.resume-doc .resume-contact {
+  font-size: 11px;
+  color: #475569;
+  margin: 0 0 10px;
+}
+
+.resume-doc .resume-h {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-bottom: 2px solid var(--accent);
+  padding-bottom: 2px;
+  margin: 14px 0 6px;
+}
+
+.resume-doc .resume-p {
+  font-size: inherit;
+  margin: 3px 0;
+  color: #1f2937;
+}
+
+.resume-doc .resume-item {
+  margin-bottom: 8px;
+  break-inside: avoid;
+}
+
+.resume-doc .resume-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: inherit;
+}
+
+.resume-doc .resume-sub {
+  color: #475569;
+  font-size: 0.92em;
+}
+
+.resume-doc .resume-list {
+  margin: 3px 0 0 16px;
+  padding: 0;
+  list-style: disc;
+}
+
+.resume-doc .resume-list li {
+  margin: 2px 0;
+}
+
+.resume-doc.layout-centered .resume-header {
+  text-align: center;
+}
+
+.resume-doc.layout-header-band .resume-header {
+  background: var(--accent);
+  color: #fff;
+  margin: -14mm -15mm 8px;
+  padding: 10mm 15mm 6mm;
+}
+
+.resume-doc.layout-header-band .resume-header h1,
+.resume-doc.layout-header-band .resume-header .resume-title,
+.resume-doc.layout-header-band .resume-header .resume-contact {
+  color: #fff;
+}
+
+.resume-doc.layout-sidebar-left {
+  padding-left: 58mm;
+  position: relative;
+}
+
+@page {
+  size: A4;
+  margin: 0;
+}
+
+@media print {
+  body.printing-resume > *:not(.print-root) {
+    display: none !important;
+  }
+  .resume-doc {
+    box-shadow: none !important;
+    margin: 0 !important;
+  }
+}
