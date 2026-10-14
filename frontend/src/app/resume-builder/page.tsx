@@ -23,7 +23,7 @@ export default function ResumeBuilderHome() {
     <>
       <PageHeader
         title="AI Resume Builder & ATS Analyzer"
-        description="Create professional resumes, export A4 PDFs, and optimize for applicant tracking systems."
+        subtitle="Create professional resumes, export A4 PDFs, and optimize for applicant tracking systems."
       />
       <div className="mb-6 flex flex-wrap gap-3">
         <Button asChild><Link href="/resume-builder/new">Create resume</Link></Button>

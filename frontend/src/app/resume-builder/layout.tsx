@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { RoleGuard } from "@/components/layout/RoleGuard";
+import { AppShell } from "@/components/layout/AppShell";
 
 export const metadata: Metadata = {
   title: "Resume Builder & ATS Analyzer",
@@ -6,5 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default function ResumeBuilderLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return (
+    <RoleGuard>
+      <AppShell>{children}</AppShell>
+    </RoleGuard>
+  );
 }

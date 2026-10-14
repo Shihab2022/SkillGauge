@@ -10,7 +10,22 @@ interface Props {
   forPrint?: boolean;
 }
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
+function SectionTitle({ children, layout }: { children: React.ReactNode; layout: string }) {
+  if (layout === "ruled") {
+    return (
+      <h2 className="resume-h resume-h-ruled">
+        <span style={{ borderColor: "var(--accent)", color: "var(--accent)" }}>{children}</span>
+      </h2>
+    );
+  }
+  if (layout === "executive") {
+    return (
+      <h2 className="resume-h resume-h-exec" style={{ borderColor: "var(--accent)" }}>
+        <span className="resume-h-exec-bar" style={{ background: "var(--accent)" }} />
+        {children}
+      </h2>
+    );
+  }
   return (
     <h2 className="resume-h" style={{ borderColor: "var(--accent)", color: "var(--accent)" }}>
       {children}
@@ -18,9 +33,16 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   );
 }
 
+const GENERIC_LABELS: Record<string, string> = {
+  certifications: "Certifications & Courses",
+  awards: "Awards & Achievements",
+  volunteer: "Volunteer Experience",
+  publications: "Publications",
+};
+
 function ContactLine({ content }: { content: ResumeContent }) {
-  const p = content.personal;
-  const bits = [p.email, p.phone, p.location, p.linkedin, p.github, p.portfolio].filter(Boolean);
+  const pp = content.personal;
+  const bits = [pp.email, pp.phone, pp.location, pp.linkedin, pp.github, pp.portfolio].filter(Boolean);
   return <p className="resume-contact">{bits.join("  •  ")}</p>;
 }
 
@@ -36,7 +58,7 @@ export function ResumePreview({ content, templateId, customization, forPrint }: 
         if (!summary) return null;
         return (
           <section key={key}>
-            <SectionTitle>Professional Summary</SectionTitle>
+            <SectionTitle layout={t.layout}>Professional Summary</SectionTitle>
             <p className="resume-p">{summary}</p>
           </section>
         );
@@ -44,7 +66,7 @@ export function ResumePreview({ content, templateId, customization, forPrint }: 
         if (!content.experience.length) return null;
         return (
           <section key={key}>
-            <SectionTitle>Work Experience</SectionTitle>
+            <SectionTitle layout={t.layout}>Work Experience</SectionTitle>
             {content.experience.map((e, i) => (
               <div key={e.id ?? i} className="resume-item">
                 <div className="resume-row">
@@ -65,7 +87,7 @@ export function ResumePreview({ content, templateId, customization, forPrint }: 
         if (!content.skillGroups.length) return null;
         return (
           <section key={key}>
-            <SectionTitle>Skills</SectionTitle>
+            <SectionTitle layout={t.layout}>Skills</SectionTitle>
             {content.skillGroups.map((g, i) => (
               <p key={g.id ?? i} className="resume-p">
                 <strong>{g.category}: </strong>{g.skills.join(", ")}
@@ -77,7 +99,7 @@ export function ResumePreview({ content, templateId, customization, forPrint }: 
         if (!content.projects.length) return null;
         return (
           <section key={key}>
-            <SectionTitle>Projects</SectionTitle>
+            <SectionTitle layout={t.layout}>Projects</SectionTitle>
             {content.projects.map((pr, i) => (
               <div key={pr.id ?? i} className="resume-item">
                 <div className="resume-row">
@@ -94,7 +116,7 @@ export function ResumePreview({ content, templateId, customization, forPrint }: 
         if (!content.education.length) return null;
         return (
           <section key={key}>
-            <SectionTitle>Education</SectionTitle>
+            <SectionTitle layout={t.layout}>Education</SectionTitle>
             {content.education.map((ed, i) => (
               <div key={ed.id ?? i} className="resume-item">
                 <div className="resume-row">
@@ -104,6 +126,19 @@ export function ResumePreview({ content, templateId, customization, forPrint }: 
                 <p className="resume-p">{[ed.degree, ed.field].filter(Boolean).join(" in ")}</p>
               </div>
             ))}
+          </section>
+        );
+      case "certifications":
+      case "awards":
+      case "volunteer":
+      case "publications":
+        return renderGeneric(content, key as "certifications" | "awards" | "volunteer" | "publications", GENERIC_LABELS[key]!, t.layout);
+      case "languages":
+        if (!content.languages.length) return null;
+        return (
+          <section key={key}>
+            <SectionTitle layout={t.layout}>Languages</SectionTitle>
+            <p className="resume-p">{content.languages.map((l) => `${l.language}${l.proficiency ? ` (${l.proficiency})` : ""}`).join("  •  ")}</p>
           </section>
         );
       default:
@@ -122,26 +157,16 @@ export function ResumePreview({ content, templateId, customization, forPrint }: 
         <ContactLine content={content} />
       </header>
       {order.map(renderSection)}
-      {renderGeneric(content, "certifications", "Certifications")}
-      {renderGeneric(content, "awards", "Awards")}
-      {renderGeneric(content, "volunteer", "Volunteer Experience")}
-      {renderGeneric(content, "publications", "Publications")}
-      {content.languages.length ? (
-        <section>
-          <SectionTitle>Languages</SectionTitle>
-          <p className="resume-p">{content.languages.map((l) => `${l.language}${l.proficiency ? ` (${l.proficiency})` : ""}`).join("  •  ")}</p>
-        </section>
-      ) : null}
     </div>
   );
 }
 
-function renderGeneric(content: ResumeContent, key: "certifications" | "awards" | "volunteer" | "publications", label: string) {
+function renderGeneric(content: ResumeContent, key: "certifications" | "awards" | "volunteer" | "publications", label: string, layout: string) {
   const items = content[key];
   if (!items.length) return null;
   return (
     <section key={key}>
-      <SectionTitle>{label}</SectionTitle>
+      <SectionTitle layout={layout}>{label}</SectionTitle>
       {items.map((it, i) => (
         <div key={it.id ?? i} className="resume-item">
           <div className="resume-row">
@@ -149,6 +174,7 @@ function renderGeneric(content: ResumeContent, key: "certifications" | "awards" 
             <span>{[it.issuer, it.date].filter(Boolean).join(" • ")}</span>
           </div>
           {it.description ? <p className="resume-p">{it.description}</p> : null}
+          {it.url ? <p className="resume-p resume-sub">{it.url}</p> : null}
         </div>
       ))}
     </section>

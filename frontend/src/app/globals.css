@@ -373,3 +373,77 @@
     margin: 0 !important;
   }
 }
+
+/* ------------------------------------------------------- layout variants */
+
+/* Ruled — hairline-underlined serif/sans headings with accent text. */
+.resume-doc .resume-h-ruled {
+  border-bottom-width: 1px;
+  border-bottom-color: #cbd5e1;
+}
+
+/* Executive — accent bar left of the heading. */
+.resume-doc .resume-h-exec {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: none;
+  padding-bottom: 0;
+  letter-spacing: 0.1em;
+}
+.resume-doc .resume-h-exec-bar {
+  display: inline-block;
+  width: 4px;
+  height: 14px;
+  border-radius: 1px;
+  flex-shrink: 0;
+}
+
+/* Two-column — split body into equal columns with a gap. */
+.resume-doc.layout-two-col .resume-body-cols {
+  column-count: 2;
+  column-gap: 10mm;
+}
+.resume-doc.layout-two-col .resume-h {
+  break-after: avoid;
+}
+
+/* Sidebar-left — accent rail down the left edge (content is single-column). */
+.resume-doc.layout-sidebar-left {
+  padding-left: 24mm;
+  position: relative;
+}
+.resume-doc.layout-sidebar-left::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 14mm;
+  background: var(--accent);
+}
+
+/* Centered — tighter masthead rhythm. */
+.resume-doc.layout-centered .resume-contact {
+  text-align: center;
+}
+
+/* ------------------------------------------------------- print portal */
+.print-root {
+  display: none;
+}
+
+@media print {
+  body.printing-resume .print-root {
+    display: block !important;
+  }
+}
+
+/* ------------------------------------------------- screen preview zoom */
+.resume-preview-frame {
+  overflow: auto;
+  max-height: calc(100vh - 9rem);
+}
+.resume-preview-frame .resume-doc {
+  margin: 0 auto;
+}

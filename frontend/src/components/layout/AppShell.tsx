@@ -6,7 +6,7 @@ import {
   LayoutDashboard, ClipboardList, Users, Building2, Library,
   FileText, BarChart3, Trophy, History, Mail, Terminal, PenLine,
   Coins, CreditCard, ShieldCheck, Lock, ScrollText, Menu,
-  LogOut, User as UserIcon, Video, Home,
+  LogOut, User as UserIcon, Video, Home, LayoutTemplate, ScanSearch,
 } from "lucide-react";
 import { useLogout } from "@/hooks/useAuth";
 import { useRecruiterDashboard, useCandidateDashboard } from "@/hooks/useDashboard";
@@ -31,6 +31,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
   LayoutDashboard, ClipboardList, Users, Building2, Library,
   FileText, BarChart3, Trophy, History, Mail, Terminal, PenLine,
   Coins, CreditCard, ShieldCheck, Lock, ScrollText, Video,
+  LayoutTemplate, ScanSearch,
 };
 
 export function AppShell({ children }: { children: React.ReactNode }) {

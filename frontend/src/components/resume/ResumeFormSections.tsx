@@ -158,3 +158,134 @@ export function SkillsSection({ content, onChange, onAssist }: SectionProps) {
     </div>
   );
 }
+
+export function ProjectsSection({ content, onChange, onAssist }: SectionProps) {
+  const list = content.projects;
+  const setItem = (idx: number, patch: Partial<(typeof list)[number]>) => {
+    const next = [...list];
+    next[idx] = { ...next[idx]!, ...patch };
+    onChange({ ...content, projects: next });
+  };
+  return (
+    <div className="space-y-4">
+      {list.length === 0 ? <p className="text-sm text-muted-foreground">No projects yet. Add one to showcase applied skills.</p> : null}
+      {list.map((pr, i) => (
+        <div key={pr.id ?? i} className="rounded-lg border border-border p-4">
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-sm font-semibold">Project {i + 1}</p>
+            <Button size="sm" variant="ghost" onClick={() => onChange({ ...content, projects: list.filter((_, j) => j !== i) })} aria-label="Remove"><Trash2 className="size-3.5" /></Button>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <TextField label="Project name" value={pr.name} onChange={(ev) => setItem(i, { name: ev.target.value })} />
+            <TextField label="Technologies (comma separated)" value={pr.technologies.join(", ")} onChange={(ev) => setItem(i, { technologies: ev.target.value.split(",").map((s) => s.trim()).filter(Boolean) })} />
+            <TextField label="Project URL" value={pr.url} onChange={(ev) => setItem(i, { url: ev.target.value })} />
+            <TextField label="GitHub URL" value={pr.githubUrl} onChange={(ev) => setItem(i, { githubUrl: ev.target.value })} />
+          </div>
+          <div className="mt-3 grid grid-cols-1 gap-3">
+            <TextareaField label="Description" value={pr.description} rows={3} maxLength={1200} hint={`${pr.description.length}/1200`} onChange={(ev) => setItem(i, { description: ev.target.value })} />
+            <TextareaField label="Measurable outcomes" value={pr.outcomes} rows={2} maxLength={600} hint="e.g. 500 weekly users, 30% faster loads" onChange={(ev) => setItem(i, { outcomes: ev.target.value })} />
+          </div>
+          {pr.description.trim() ? (
+            <Button size="sm" variant="outline" className="mt-2" onClick={() => onAssist("make-clearer", pr.description, (s) => setItem(i, { description: s }))}>
+              <Sparkles className="size-3.5" /> Improve description
+            </Button>
+          ) : null}
+        </div>
+      ))}
+      <Button size="sm" variant="outline" onClick={() => onChange({ ...content, projects: [...list, { id: uid(), name: "", description: "", technologies: [], url: "", githubUrl: "", outcomes: "" }] })}>
+        <Plus className="size-3.5" /> Add project
+      </Button>
+    </div>
+  );
+}
+
+export function GenericSection({ content, onChange, field, title, singular }: SectionProps & { field: "certifications" | "awards" | "volunteer" | "publications"; title: string; singular: string }) {
+  const list = content[field];
+  const setItem = (idx: number, patch: Partial<(typeof list)[number]>) => {
+    const n = [...list];
+    n[idx] = { ...n[idx]!, ...patch };
+    onChange({ ...content, [field]: n });
+  };
+  return (
+    <div className="space-y-4">
+      {list.length === 0 ? <p className="text-sm text-muted-foreground">No {title.toLowerCase()} yet.</p> : null}
+      {list.map((it, i) => (
+        <div key={it.id ?? i} className="rounded-lg border border-border p-4">
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-sm font-semibold">{singular} {i + 1}</p>
+            <Button size="sm" variant="ghost" onClick={() => onChange({ ...content, [field]: list.filter((_, j) => j !== i) })} aria-label="Remove"><Trash2 className="size-3.5" /></Button>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <TextField label="Title" value={it.title} onChange={(ev) => setItem(i, { title: ev.target.value })} />
+            <TextField label="Issuer / Organization" value={it.issuer} onChange={(ev) => setItem(i, { issuer: ev.target.value })} />
+            <TextField label="Date" value={it.date} onChange={(ev) => setItem(i, { date: ev.target.value })} />
+            <TextField label="URL (optional)" value={it.url} onChange={(ev) => setItem(i, { url: ev.target.value })} />
+          </div>
+          <div className="mt-3">
+            <TextareaField label="Description (optional)" value={it.description} rows={2} maxLength={800} onChange={(ev) => setItem(i, { description: ev.target.value })} />
+          </div>
+        </div>
+      ))}
+      <Button size="sm" variant="outline" onClick={() => onChange({ ...content, [field]: [...list, { id: uid(), title: "", issuer: "", date: "", description: "", url: "" }] })}>
+        <Plus className="size-3.5" /> Add {singular.toLowerCase()}
+      </Button>
+    </div>
+  );
+}
+
+export const SECTION_LABELS: Record<string, string> = {
+  summary: "Professional summary",
+  experience: "Work experience",
+  skills: "Skills",
+  projects: "Projects",
+  education: "Education",
+  certifications: "Certifications",
+  languages: "Languages",
+  awards: "Awards",
+  volunteer: "Volunteer",
+  publications: "Publications",
+};
+
+export function SectionOrderControl({ content, onChange }: SectionProps) {
+  const order = content.sectionOrder?.length ? content.sectionOrder : Object.keys(SECTION_LABELS);
+  const move = (i: number, dir: -1 | 1) => {
+    const n = [...order];
+    const j = i + dir;
+    if (j < 0 || j >= n.length) return;
+    const [x] = n.splice(i, 1);
+    n.splice(j, 0, x!);
+    onChange({ ...content, sectionOrder: n });
+  };
+  return (
+    <div className="space-y-2">
+      <p className="text-xs text-muted-foreground">Reorder how sections appear in the preview and PDF export.</p>
+      {order.map((key, i) => (
+        <div key={key} className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm">
+          <span className="font-medium">{SECTION_LABELS[key] ?? key}</span>
+          <div className="flex gap-1">
+            <Button size="sm" variant="ghost" disabled={i === 0} onClick={() => move(i, -1)} aria-label="Move up"><ArrowUp className="size-3.5" /></Button>
+            <Button size="sm" variant="ghost" disabled={i === order.length - 1} onClick={() => move(i, 1)} aria-label="Move down"><ArrowDown className="size-3.5" /></Button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function LanguagesSection({ content, onChange }: SectionProps) {
+  const list = content.languages;
+  return (
+    <div className="space-y-3">
+      {list.map((l, i) => (
+        <div key={i} className="flex items-end gap-2">
+          <div className="flex-1"><TextField label={i === 0 ? "Language" : undefined} value={l.language} onChange={(ev) => { const n = [...list]; n[i] = { ...n[i]!, language: ev.target.value }; onChange({ ...content, languages: n }); }} placeholder="e.g. English" /></div>
+          <div className="flex-1"><TextField label={i === 0 ? "Proficiency" : undefined} value={l.proficiency} onChange={(ev) => { const n = [...list]; n[i] = { ...n[i]!, proficiency: ev.target.value }; onChange({ ...content, languages: n }); }} placeholder="e.g. Fluent" /></div>
+          <Button size="sm" variant="ghost" onClick={() => onChange({ ...content, languages: list.filter((_, j) => j !== i) })} aria-label="Remove"><Trash2 className="size-3.5" /></Button>
+        </div>
+      ))}
+      <Button size="sm" variant="outline" onClick={() => onChange({ ...content, languages: [...list, { language: "", proficiency: "" }] })}>
+        <Plus className="size-3.5" /> Add language
+      </Button>
+    </div>
+  );
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Card, CardBody, PageHeader } from "@/components/ui/Card";
@@ -18,6 +18,12 @@ export default function NewResumePage() {
   const [templateId, setTemplateId] = useState("ats-classic-01");
   const [withSample, setWithSample] = useState(false);
   const [pending, setPending] = useState(false);
+
+  // Deep link from the template gallery: /resume-builder/new?template=<id>
+  useEffect(() => {
+    const preset = new URLSearchParams(window.location.search).get("template");
+    if (preset && ALL_TEMPLATES.some((t) => t.id === preset)) setTemplateId(preset);
+  }, []);
 
   const create = async () => {
     if (!title.trim()) {
@@ -42,7 +48,7 @@ export default function NewResumePage() {
 
   return (
     <>
-      <PageHeader title="Create a resume" description="Name it, pick a starting template, optionally preload sample content." />
+      <PageHeader title="Create a resume" subtitle="Name it, pick a starting template, optionally preload sample content." />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-1">
           <CardBody className="space-y-4 p-5">

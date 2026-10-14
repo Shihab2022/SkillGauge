@@ -499,6 +499,9 @@ export const CANDIDATE_NAV: NavItem[] = [
   },
   { href: "/candidate/attempts", label: "My attempts", icon: "History" },
   { href: "/candidate/results", label: "My results", icon: "Trophy" },
+  { href: "/resume-builder", label: "Resume builder", icon: "FileText" },
+  { href: "/resume-analyzer", label: "ATS analyzer", icon: "ScanSearch" },
+  { href: "/resume-dashboard", label: "Resume dashboard", icon: "LayoutTemplate" },
 ];
 
 export const ADMIN_NAV: NavItem[] = [
