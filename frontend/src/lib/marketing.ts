@@ -49,6 +49,7 @@ export const LANDING_NAV: LandingNavLink[] = [
 export const HEADER_ROUTE_LINKS: LandingNavLink[] = [
   { href: "/practice", label: "Practice arena" },
   { href: "/playground", label: "Online compiler" },
+  { href: "/resume-builder", label: "Resume builder" },
 ];
 
 /**
@@ -626,6 +627,7 @@ export const LANDING_FOOTER_GROUPS: LandingFooterGroup[] = [
       { label: "Practice arena", href: "/practice" },
       { label: "Online compiler", href: "/playground" },
       { label: "Open competitions", href: "/competitions" },
+      { label: "Resume builder (no login)", href: "/resume-builder" },
     ],
   },
   {

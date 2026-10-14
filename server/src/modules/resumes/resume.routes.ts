@@ -1,7 +1,7 @@
 import express from "express";
 import rateLimit from "express-rate-limit";
-import auth from "../../middlewares/auth";
 import { validate } from "../../middlewares/validate";
+import { resumeIdentity } from "./guestIdentity";
 import { ResumeController } from "./resume.controller";
 import {
   createResumeSchema, updateResumeSchema, resumeParamsSchema, resumeListQuerySchema,
@@ -20,7 +20,9 @@ const aiLimiter = rateLimit({
 router.get("/scoring-model", ResumeController.scoringModel);
 router.get("/shared/:slug", validate(publicResumeParamsSchema), ResumeController.publicResume);
 
-router.use(auth());
+// Public without login: signed-in users keep their account, anonymous callers
+// resolve to a per-browser guest user (see ./guestIdentity.ts).
+router.use(resumeIdentity);
 
 // Resumes
 router.get("/", validate(resumeListQuerySchema), ResumeController.listResumes);

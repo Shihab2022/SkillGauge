@@ -1,5 +1,6 @@
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from "axios";
 import { useAuthStore } from "@/store/auth";
+import { getOrCreateGuestId } from "@/lib/guest";
 import type { ApiEnvelope, ApiErrorField, Meta, Paginated } from "../types";
 import { API_BASE_URL } from "@/lib/env";
 
@@ -18,9 +19,14 @@ export const api: AxiosInstance = axios.create({
 
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().accessToken;
+  config.headers = config.headers ?? {};
   if (token) {
-    config.headers = config.headers ?? {};
     config.headers.Authorization = `Bearer ${token}`;
+  } else {
+    // Login-free visitors (resume suite) get a stable per-browser guest id so
+    // the API can resolve their guest-owned data without a session.
+    const guestId = getOrCreateGuestId();
+    if (guestId) config.headers["x-guest-id"] = guestId;
   }
   return config;
 });

@@ -1,10 +1,5 @@
-import { RoleGuard } from "@/components/layout/RoleGuard";
-import { AppShell } from "@/components/layout/AppShell";
+import { ResumeShell } from "@/components/resume/ResumeShell";
 
 export default function ResumeTemplatesLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <RoleGuard>
-      <AppShell>{children}</AppShell>
-    </RoleGuard>
-  );
+  return <ResumeShell>{children}</ResumeShell>;
 }
