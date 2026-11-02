@@ -10,13 +10,13 @@
 
 ## 📚 Documentation
 
-| Resource | Link |
-|---|---|
-| **Roles, registration, email confirmation & exam-invitation flows** | [`docs/AUTH_AND_EMAIL.md`](docs/AUTH_AND_EMAIL.md) |
-| Backend setup, architecture, env vars, deployment | [`server/README.md`](server/README.md) |
-| Full REST API reference (enums, DB models, Postman) | [`server/api.md`](server/api.md) |
-| Interactive Swagger UI | `http://localhost:5000/api/docs` |
-| Postman collection | [`server/docs/postman-collection.json`](server/docs/postman-collection.json) |
+| Resource                                                            | Link                                                                         |
+| ------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| **Roles, registration, email confirmation & exam-invitation flows** | [`docs/AUTH_AND_EMAIL.md`](docs/AUTH_AND_EMAIL.md)                           |
+| Backend setup, architecture, env vars, deployment                   | [`server/README.md`](server/README.md)                                       |
+| Full REST API reference (enums, DB models, Postman)                 | [`server/api.md`](server/api.md)                                             |
+| Interactive Swagger UI                                              | `http://localhost:5000/api/docs`                                             |
+| Postman collection                                                  | [`server/docs/postman-collection.json`](server/docs/postman-collection.json) |
 
 ## ✨ Features
 
@@ -41,8 +41,6 @@
   sandboxed architecture for coding (the API server never executes candidate code).
 - **Results & reports** — per-attempt results, candidate rankings, question performance,
   and company-level analytics (Redis cached).
-- **Payments (SSLCommerz)** — recruiters purchase credit packages before publishing;
-  verified and idempotent callbacks.
 - **Anti-cheating** — proctoring events (tab switch, copy/paste, fullscreen exit, …).
 - **Proctored AI video interviews** — organisations publish a public camera + microphone
   link; ~10 random questions per technology (each with its own 5-minute timer and hints)
@@ -56,15 +54,15 @@
 
 ## 🔄 How it works (short version)
 
-| Step | What happens |
-|---|---|
-| 1 | **Register** on a dedicated page: `/register/candidate`, `/register/recruiter` (needs a company join code) or `/register/company` (creates the company). |
-| 2 | A **confirmation email** is sent. Until the address is confirmed, login returns `403`. |
-| 3 | A **company owner** (`COMPANY`) copies the join code and invites recruiters from **Recruiter → Company → Team & recruiters**. |
-| 4 | A **recruiter** invites candidates to an assessment; each candidate receives an **email with a personal exam link**. |
-| 5 | The candidate opens the link, **signs in or registers** with the invited email, and **starts the exam** (server-timed). |
-| 6 | The email is single-use: once the exam is started it **cannot be taken again with that Gmail address**. |
-| 7 | On submit the **result is stored**, the candidate is notified in-app and receives a **result email**. |
+| Step | What happens                                                                                                                                             |
+| ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | **Register** on a dedicated page: `/register/candidate`, `/register/recruiter` (needs a company join code) or `/register/company` (creates the company). |
+| 2    | A **confirmation email** is sent. Until the address is confirmed, login returns `403`.                                                                   |
+| 3    | A **company owner** (`COMPANY`) copies the join code and invites recruiters from **Recruiter → Company → Team & recruiters**.                            |
+| 4    | A **recruiter** invites candidates to an assessment; each candidate receives an **email with a personal exam link**.                                     |
+| 5    | The candidate opens the link, **signs in or registers** with the invited email, and **starts the exam** (server-timed).                                  |
+| 6    | The email is single-use: once the exam is started it **cannot be taken again with that Gmail address**.                                                  |
+| 7    | On submit the **result is stored**, the candidate is notified in-app and receives a **result email**.                                                    |
 
 Full details, diagrams and endpoint tables:
 [`docs/AUTH_AND_EMAIL.md`](docs/AUTH_AND_EMAIL.md).
@@ -105,11 +103,11 @@ npm run dev                 # → http://localhost:5000
 
 ### 🔑 Seed Credentials
 
-| Role | Email | Password |
-|---|---|---|
-| Admin | `admin@skillgauge.local` | `Admin123!` |
-| Recruiter | `recruiter@techcorp.dev` | `Recruit123!` |
-| Candidate | `candidate@skillgauge.local` | `Candid8te!` |
+| Role      | Email                        | Password      |
+| --------- | ---------------------------- | ------------- |
+| Admin     | `admin@skillgauge.local`     | `Admin123!`   |
+| Recruiter | `recruiter@techcorp.dev`     | `Recruit123!` |
+| Candidate | `candidate@skillgauge.local` | `Candid8te!`  |
 
 ## 🌐 API Overview
 
@@ -131,161 +129,161 @@ apply to login/register, password change, payments, submissions/answers, and inv
 
 ### Problems — `/api/v1/problems`
 
-| Method | Endpoint | Description | Access |
-|---|---|---|---|
-| POST | `/problems` | Create CODING / MCQ / WRITTEN problem | 🧑‍💼 |
-| GET | `/problems` | List problems (filter, sort, paginate) | 🔐 |
-| GET | `/problems/search?q=…` | Full-text search | 🔐 |
-| GET | `/problems/:id` | Get problem (hidden test cases never exposed) | 🔐 |
-| PATCH | `/problems/:id` | Update a problem | 🧑‍💼 |
-| DELETE | `/problems/:id` | Soft-delete a problem | 🧑‍💼 |
+| Method | Endpoint               | Description                                   | Access |
+| ------ | ---------------------- | --------------------------------------------- | ------ |
+| POST   | `/problems`            | Create CODING / MCQ / WRITTEN problem         | 🧑‍💼     |
+| GET    | `/problems`            | List problems (filter, sort, paginate)        | 🔐     |
+| GET    | `/problems/search?q=…` | Full-text search                              | 🔐     |
+| GET    | `/problems/:id`        | Get problem (hidden test cases never exposed) | 🔐     |
+| PATCH  | `/problems/:id`        | Update a problem                              | 🧑‍💼     |
+| DELETE | `/problems/:id`        | Soft-delete a problem                         | 🧑‍💼     |
 
 ### Assessments — `/api/v1/assessments`
 
-| Method | Endpoint | Description | Access |
-|---|---|---|---|
-| POST | `/assessments` | Create an assessment | 🧑‍💼 |
-| GET | `/assessments` | List assessments (`?q&status&companyId`) | 🔐 |
-| GET | `/assessments/:id` | Get an assessment | 🔐 |
-| PATCH | `/assessments/:id` | Update (DRAFT/PUBLISHED only) | 🧑‍💼 |
-| DELETE | `/assessments/:id` | Soft-delete | 🧑‍💼 |
-| POST | `/assessments/:id/publish` | Publish (DRAFT → PUBLISHED, consumes credit) | 🧑‍💼 |
-| POST | `/assessments/:id/close` | Close assessment | 🧑‍💼 |
-| POST | `/assessments/:id/duplicate` | Duplicate assessment | 🧑‍💼 |
-| POST | `/assessments/:id/archive` | Archive assessment | 🧑‍💼 |
-| POST | `/assessments/:id/restore` | Restore archived assessment | 🧑‍💼 |
-| POST | `/assessments/:id/recalculate-results` | Recompute all results | 🧑‍💼 |
-| GET | `/assessments/:id/candidates/compare` | Compare candidate performance | 🧑‍💼 |
-| GET | `/assessments/:id/history` | Status-change history | 🧑‍💼 |
-| POST | `/assessments/:id/problems` | Add problem (points, order, section) | 🧑‍💼 |
-| GET | `/assessments/:id/problems` | List assessment problems | 🔐 |
-| PATCH | `/assessments/:id/problems/:problemId` | Update problem config | 🧑‍💼 |
-| DELETE | `/assessments/:id/problems/:problemId` | Remove problem from assessment | 🧑‍💼 |
-| GET | `/assessments/:id/report` | Assessment report | 🧑‍💼 |
-| GET | `/assessments/:id/report/export.csv` | Export report as CSV | 🧑‍💼 |
-| GET | `/assessments/:id/analytics` | Assessment analytics | 🧑‍💼 |
-| GET | `/assessments/:id/results` | Results for an assessment | 🧑‍💼 |
+| Method | Endpoint                               | Description                                  | Access |
+| ------ | -------------------------------------- | -------------------------------------------- | ------ |
+| POST   | `/assessments`                         | Create an assessment                         | 🧑‍💼     |
+| GET    | `/assessments`                         | List assessments (`?q&status&companyId`)     | 🔐     |
+| GET    | `/assessments/:id`                     | Get an assessment                            | 🔐     |
+| PATCH  | `/assessments/:id`                     | Update (DRAFT/PUBLISHED only)                | 🧑‍💼     |
+| DELETE | `/assessments/:id`                     | Soft-delete                                  | 🧑‍💼     |
+| POST   | `/assessments/:id/publish`             | Publish (DRAFT → PUBLISHED, consumes credit) | 🧑‍💼     |
+| POST   | `/assessments/:id/close`               | Close assessment                             | 🧑‍💼     |
+| POST   | `/assessments/:id/duplicate`           | Duplicate assessment                         | 🧑‍💼     |
+| POST   | `/assessments/:id/archive`             | Archive assessment                           | 🧑‍💼     |
+| POST   | `/assessments/:id/restore`             | Restore archived assessment                  | 🧑‍💼     |
+| POST   | `/assessments/:id/recalculate-results` | Recompute all results                        | 🧑‍💼     |
+| GET    | `/assessments/:id/candidates/compare`  | Compare candidate performance                | 🧑‍💼     |
+| GET    | `/assessments/:id/history`             | Status-change history                        | 🧑‍💼     |
+| POST   | `/assessments/:id/problems`            | Add problem (points, order, section)         | 🧑‍💼     |
+| GET    | `/assessments/:id/problems`            | List assessment problems                     | 🔐     |
+| PATCH  | `/assessments/:id/problems/:problemId` | Update problem config                        | 🧑‍💼     |
+| DELETE | `/assessments/:id/problems/:problemId` | Remove problem from assessment               | 🧑‍💼     |
+| GET    | `/assessments/:id/report`              | Assessment report                            | 🧑‍💼     |
+| GET    | `/assessments/:id/report/export.csv`   | Export report as CSV                         | 🧑‍💼     |
+| GET    | `/assessments/:id/analytics`           | Assessment analytics                         | 🧑‍💼     |
+| GET    | `/assessments/:id/results`             | Results for an assessment                    | 🧑‍💼     |
 
 ### Invitations — `/api/v1`
 
-| Method | Endpoint | Description | Access |
-|---|---|---|---|
-| POST | `/assessments/:id/invitations` | Invite candidates by email | 🧑‍💼 |
-| GET | `/assessments/:id/invitations` | List invitations for an assessment | 🧑‍💼 |
-| POST | `/invitations/:id/resend` | Resend invitation email (rate-limited) | 🧑‍💼 |
-| POST | `/invitations/:id/accept` | Accept an invitation | 🎓 |
-| POST | `/invitations/:id/reject` | Reject an invitation | 🎓 |
+| Method | Endpoint                       | Description                            | Access |
+| ------ | ------------------------------ | -------------------------------------- | ------ |
+| POST   | `/assessments/:id/invitations` | Invite candidates by email             | 🧑‍💼     |
+| GET    | `/assessments/:id/invitations` | List invitations for an assessment     | 🧑‍💼     |
+| POST   | `/invitations/:id/resend`      | Resend invitation email (rate-limited) | 🧑‍💼     |
+| POST   | `/invitations/:id/accept`      | Accept an invitation                   | 🎓     |
+| POST   | `/invitations/:id/reject`      | Reject an invitation                   | 🎓     |
 
 ### Attempts — `/api/v1`
 
-| Method | Endpoint | Description | Access |
-|---|---|---|---|
-| POST | `/assessments/:id/attempts/start` | Start a timed attempt | 🎓 |
-| GET | `/attempts/:id` | Get attempt details | 🔐 |
-| GET | `/attempts/:id/time` | Remaining time (server-authoritative) | 🔐 |
-| GET | `/attempts/:id/questions` | Attempt questions (no hidden tests) | 🔐 |
-| POST | `/attempts/:id/answers` | Save an answer (MCQ/code/written) | 🎓 |
-| PATCH | `/attempts/:id/answers/:answerId` | Update a saved answer | 🎓 |
-| POST | `/attempts/:id/submit` | Submit attempt → evaluation + result | 🎓 |
-| GET | `/attempts/:id/anti-cheating-report` | Anti-cheating report | 🔐 |
-| POST | `/attempts/:id/anti-cheating-events` | Report a proctoring event | 🎓 |
-| GET | `/attempts/:id/anti-cheating-events` | List proctoring events | 🔐 |
-| GET | `/attempts/:id/submissions` | Submissions for this attempt | 🔐 |
-| GET | `/attempts/:id/evaluations` | Evaluations for this attempt | 🔐 |
+| Method | Endpoint                             | Description                           | Access |
+| ------ | ------------------------------------ | ------------------------------------- | ------ |
+| POST   | `/assessments/:id/attempts/start`    | Start a timed attempt                 | 🎓     |
+| GET    | `/attempts/:id`                      | Get attempt details                   | 🔐     |
+| GET    | `/attempts/:id/time`                 | Remaining time (server-authoritative) | 🔐     |
+| GET    | `/attempts/:id/questions`            | Attempt questions (no hidden tests)   | 🔐     |
+| POST   | `/attempts/:id/answers`              | Save an answer (MCQ/code/written)     | 🎓     |
+| PATCH  | `/attempts/:id/answers/:answerId`    | Update a saved answer                 | 🎓     |
+| POST   | `/attempts/:id/submit`               | Submit attempt → evaluation + result  | 🎓     |
+| GET    | `/attempts/:id/anti-cheating-report` | Anti-cheating report                  | 🔐     |
+| POST   | `/attempts/:id/anti-cheating-events` | Report a proctoring event             | 🎓     |
+| GET    | `/attempts/:id/anti-cheating-events` | List proctoring events                | 🔐     |
+| GET    | `/attempts/:id/submissions`          | Submissions for this attempt          | 🔐     |
+| GET    | `/attempts/:id/evaluations`          | Evaluations for this attempt          | 🔐     |
 
 ### Submissions — `/api/v1/submissions`
 
-| Method | Endpoint | Description | Access |
-|---|---|---|---|
-| POST | `/submissions` | Create a coding submission (rate-limited) | 🎓 |
-| GET | `/submissions/:id` | Get a submission | 🔐 |
-| POST | `/submissions/:id/evaluate` | Trigger sandbox evaluation | 🧑‍💼 |
+| Method | Endpoint                    | Description                               | Access |
+| ------ | --------------------------- | ----------------------------------------- | ------ |
+| POST   | `/submissions`              | Create a coding submission (rate-limited) | 🎓     |
+| GET    | `/submissions/:id`          | Get a submission                          | 🔐     |
+| POST   | `/submissions/:id/evaluate` | Trigger sandbox evaluation                | 🧑‍💼     |
 
 ### Evaluations — `/api/v1/evaluations`
 
-| Method | Endpoint | Description | Access |
-|---|---|---|---|
-| GET | `/evaluations/pending` | List pending manual evaluations | 🧑‍💼 |
-| POST | `/evaluations/written` | Manually score a written answer | 🧑‍💼 |
+| Method | Endpoint               | Description                     | Access |
+| ------ | ---------------------- | ------------------------------- | ------ |
+| GET    | `/evaluations/pending` | List pending manual evaluations | 🧑‍💼     |
+| POST   | `/evaluations/written` | Manually score a written answer | 🧑‍💼     |
 
 ### Results — `/api/v1/results`
 
-| Method | Endpoint | Description | Access |
-|---|---|---|---|
-| GET | `/results/:id` | Get a result (respects `showResults` policy) | 🔐 |
-| GET | `/results/:id/skills` | Skill-wise breakdown | 🔐 |
+| Method | Endpoint              | Description                                  | Access |
+| ------ | --------------------- | -------------------------------------------- | ------ |
+| GET    | `/results/:id`        | Get a result (respects `showResults` policy) | 🔐     |
+| GET    | `/results/:id/skills` | Skill-wise breakdown                         | 🔐     |
 
 ### Assessment Templates — `/api/v1/assessment-templates`
 
-| Method | Endpoint | Description | Access |
-|---|---|---|---|
-| POST | `/assessment-templates` | Create a reusable template | 🧑‍💼 |
-| GET | `/assessment-templates` | List templates | 🔐 |
-| GET | `/assessment-templates/:id` | Get a template | 🔐 |
-| PATCH | `/assessment-templates/:id` | Update a template | 🧑‍💼 |
-| DELETE | `/assessment-templates/:id` | Delete a template | 🧑‍💼 |
-| POST | `/assessment-templates/:id/use` | Create an assessment from a template | 🧑‍💼 |
+| Method | Endpoint                        | Description                          | Access |
+| ------ | ------------------------------- | ------------------------------------ | ------ |
+| POST   | `/assessment-templates`         | Create a reusable template           | 🧑‍💼     |
+| GET    | `/assessment-templates`         | List templates                       | 🔐     |
+| GET    | `/assessment-templates/:id`     | Get a template                       | 🔐     |
+| PATCH  | `/assessment-templates/:id`     | Update a template                    | 🧑‍💼     |
+| DELETE | `/assessment-templates/:id`     | Delete a template                    | 🧑‍💼     |
+| POST   | `/assessment-templates/:id/use` | Create an assessment from a template | 🧑‍💼     |
 
 ### Notes — `/api/v1/notes`
 
-| Method | Endpoint | Description | Access |
-|---|---|---|---|
-| POST | `/notes` | Add a note to a candidate | 🧑‍💼 |
-| GET | `/notes/candidate/:candidateId` | List a candidate's notes | 🔐 |
-| PATCH | `/notes/:noteId` | Update a note | 🧑‍💼 |
-| DELETE | `/notes/:noteId` | Delete a note | 🧑‍💼 |
+| Method | Endpoint                        | Description               | Access |
+| ------ | ------------------------------- | ------------------------- | ------ |
+| POST   | `/notes`                        | Add a note to a candidate | 🧑‍💼     |
+| GET    | `/notes/candidate/:candidateId` | List a candidate's notes  | 🔐     |
+| PATCH  | `/notes/:noteId`                | Update a note             | 🧑‍💼     |
+| DELETE | `/notes/:noteId`                | Delete a note             | 🧑‍💼     |
 
 ### Notifications — `/api/v1/notifications`
 
-| Method | Endpoint | Description | Access |
-|---|---|---|---|
-| GET | `/notifications` | List my notifications | 🔐 |
-| GET | `/notifications/unread-count` | Unread notification count | 🔐 |
-| PATCH | `/notifications/:id/read` | Mark a notification as read | 🔐 |
-| POST | `/notifications/read-all` | Mark all notifications as read | 🔐 |
+| Method | Endpoint                      | Description                    | Access |
+| ------ | ----------------------------- | ------------------------------ | ------ |
+| GET    | `/notifications`              | List my notifications          | 🔐     |
+| GET    | `/notifications/unread-count` | Unread notification count      | 🔐     |
+| PATCH  | `/notifications/:id/read`     | Mark a notification as read    | 🔐     |
+| POST   | `/notifications/read-all`     | Mark all notifications as read | 🔐     |
 
 ### Dashboard — `/api/v1/dashboard`
 
-| Method | Endpoint | Description | Access |
-|---|---|---|---|
-| GET | `/dashboard/recruiter` | Recruiter dashboard stats | 🧑‍💼 |
-| GET | `/dashboard/candidate` | Candidate dashboard stats | 🎓 |
+| Method | Endpoint               | Description               | Access |
+| ------ | ---------------------- | ------------------------- | ------ |
+| GET    | `/dashboard/recruiter` | Recruiter dashboard stats | 🧑‍💼     |
+| GET    | `/dashboard/candidate` | Candidate dashboard stats | 🎓     |
 
 ### Payments — `/api/v1/payments`
 
-| Method | Endpoint | Description | Access |
-|---|---|---|---|
-| GET | `/payments/packages` | List credit packages | 🔓 |
-| POST | `/payments/initiate` | Initiate payment → gateway URL | 🔐 |
-| GET/POST | `/payments/success` | SSLCommerz success callback | 🔓 (webhook) |
-| GET/POST | `/payments/fail` | SSLCommerz failure callback | 🔓 (webhook) |
-| GET/POST | `/payments/cancel` | SSLCommerz cancel callback | 🔓 (webhook) |
-| POST | `/payments/ipn` | SSLCommerz IPN (idempotent) | 🔓 (webhook) |
-| GET | `/payments` | List my payments | 🔐 |
-| GET | `/payments/:id` | Get a payment | 🔐 |
+| Method   | Endpoint             | Description                    | Access       |
+| -------- | -------------------- | ------------------------------ | ------------ |
+| GET      | `/payments/packages` | List credit packages           | 🔓           |
+| POST     | `/payments/initiate` | Initiate payment → gateway URL | 🔐           |
+| GET/POST | `/payments/success`  | SSLCommerz success callback    | 🔓 (webhook) |
+| GET/POST | `/payments/fail`     | SSLCommerz failure callback    | 🔓 (webhook) |
+| GET/POST | `/payments/cancel`   | SSLCommerz cancel callback     | 🔓 (webhook) |
+| POST     | `/payments/ipn`      | SSLCommerz IPN (idempotent)    | 🔓 (webhook) |
+| GET      | `/payments`          | List my payments               | 🔐           |
+| GET      | `/payments/:id`      | Get a payment                  | 🔐           |
 
 ### Admin — `/api/v1/admin` (🛡️ ADMIN only)
 
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/admin/users` | List all users |
-| GET | `/admin/users/:id` | Get user details |
-| PATCH | `/admin/users/:id/status` | Set ACTIVE / SUSPENDED / DELETED |
-| PATCH | `/admin/users/:id/role` | Change role (CANDIDATE / RECRUITER / ADMIN) |
-| GET | `/admin/companies` | List all companies |
-| GET | `/admin/assessments` | List all assessments |
-| GET | `/admin/payments` | List all payments |
-| GET | `/admin/problems` | List all problems |
-| GET | `/admin/dashboard-stats` | Platform statistics & revenue |
-| GET | `/admin/audit-logs` | Query audit logs |
+| Method | Endpoint                  | Description                                 |
+| ------ | ------------------------- | ------------------------------------------- |
+| GET    | `/admin/users`            | List all users                              |
+| GET    | `/admin/users/:id`        | Get user details                            |
+| PATCH  | `/admin/users/:id/status` | Set ACTIVE / SUSPENDED / DELETED            |
+| PATCH  | `/admin/users/:id/role`   | Change role (CANDIDATE / RECRUITER / ADMIN) |
+| GET    | `/admin/companies`        | List all companies                          |
+| GET    | `/admin/assessments`      | List all assessments                        |
+| GET    | `/admin/payments`         | List all payments                           |
+| GET    | `/admin/problems`         | List all problems                           |
+| GET    | `/admin/dashboard-stats`  | Platform statistics & revenue               |
+| GET    | `/admin/audit-logs`       | Query audit logs                            |
 
 ### System
 
-| Method | Endpoint | Description | Access |
-|---|---|---|---|
-| GET | `/` | Service banner / smoketest | 🔓 |
-| GET | `/health` | Health check (when enabled) | 🔓 |
-| GET | `/api/docs` | Swagger UI | 🔓 |
+| Method | Endpoint    | Description                 | Access |
+| ------ | ----------- | --------------------------- | ------ |
+| GET    | `/`         | Service banner / smoketest  | 🔓     |
+| GET    | `/health`   | Health check (when enabled) | 🔓     |
+| GET    | `/api/docs` | Swagger UI                  | 🔓     |
 
 ## 🧪 Sample JSON Payloads (Test Data)
 
@@ -412,10 +410,26 @@ POST /api/v1/problems
   "points": 5,
   "tags": ["javascript", "async"],
   "options": [
-    { "text": "It runs synchronously in the call stack", "isCorrect": false, "order": 0 },
-    { "text": "It is queued in the microtask queue and runs after the current stack unwinds", "isCorrect": true, "order": 1 },
-    { "text": "It runs on a separate OS thread", "isCorrect": false, "order": 2 },
-    { "text": "It runs only after all setTimeout callbacks", "isCorrect": false, "order": 3 }
+    {
+      "text": "It runs synchronously in the call stack",
+      "isCorrect": false,
+      "order": 0
+    },
+    {
+      "text": "It is queued in the microtask queue and runs after the current stack unwinds",
+      "isCorrect": true,
+      "order": 1
+    },
+    {
+      "text": "It runs on a separate OS thread",
+      "isCorrect": false,
+      "order": 2
+    },
+    {
+      "text": "It runs only after all setTimeout callbacks",
+      "isCorrect": false,
+      "order": 3
+    }
   ]
 }
 ```
@@ -437,9 +451,7 @@ POST /api/v1/problems
   "timeLimit": 15,
   "memoryLimit": 256,
   "allowedLanguages": ["javascript", "python", "go"],
-  "examples": [
-    { "input": "1\n2", "output": "3", "explanation": "1 + 2 = 3" }
-  ],
+  "examples": [{ "input": "1\n2", "output": "3", "explanation": "1 + 2 = 3" }],
   "testCases": [
     { "input": "1\n2", "expectedOutput": "3", "isHidden": false, "order": 0 },
     { "input": "10\n20", "expectedOutput": "30", "isHidden": true, "order": 1 },
