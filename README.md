@@ -25,6 +25,7 @@
 | **Complete REST API Reference** | Technical schema, database models, enums, error contracts | [`server/api.md`](server/api.md) |
 | **Interactive OpenAPI / Swagger** | Interactive browser API explorer | `http://localhost:5000/api/docs` |
 | **Postman Collection** | Pre-built API collection for manual testing | [`server/docs/postman-collection.json`](server/docs/postman-collection.json) |
+| **Feature Expansion Roadmap** | 25+ planned features with architecture & implementation guides | [`ROADMAP.md`](ROADMAP.md) |
 
 ---
 
