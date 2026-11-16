@@ -1,6 +1,7 @@
 import httpStatus from "http-status";
 import axios from "axios";
 import { prisma } from "../../lib/prisma";
+import config from "../../config";
 import ApiError from "../../helpers/ApiError";
 import { IAuthUser } from "../../types";
 import { analyzeResume } from "./ai.service";
@@ -8,10 +9,20 @@ import { resumeToPlainText } from "./scoring";
 import type { ResumeContent } from "./resume.validation";
 
 const BLOCKED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0", "::1", "169.254.169.254"];
-const MAX_FETCH_BYTES = 4 * 1024 * 1024;
+const MAX_FETCH_BYTES = 10 * 1024 * 1024;
 
 export function assertSafeResumeUrl(raw: string): URL {
-  const url = new URL(raw);
+  let target = raw.trim();
+  // Transform common share links to direct downloadable streams
+  const gdriveMatch = target.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/i);
+  if (gdriveMatch?.[1]) {
+    target = `https://drive.google.com/uc?export=download&id=${gdriveMatch[1]}`;
+  } else if (/dropbox\.com/i.test(target)) {
+    target = target.replace(/[?&]dl=0/, "").replace(/[?&]raw=0/, "");
+    target += target.includes("?") ? "&raw=1" : "?raw=1";
+  }
+
+  const url = new URL(target);
   if (!["http:", "https:"].includes(url.protocol)) throw new ApiError(httpStatus.BAD_REQUEST, "Only http(s) URLs are supported");
   const host = url.hostname.toLowerCase();
   if (BLOCKED_HOSTS.includes(host) || host.endsWith(".internal") || host.endsWith(".local")) {
@@ -20,28 +31,22 @@ export function assertSafeResumeUrl(raw: string): URL {
   return url;
 }
 
-export async function fetchResumeUrlText(raw: string): Promise<{ text: string; mime: string }> {
-  const url = assertSafeResumeUrl(raw);
-  const res = await axios.get(url.toString(), {
-    timeout: 15000, maxContentLength: MAX_FETCH_BYTES, responseType: "arraybuffer",
-    headers: { "User-Agent": "SkillGauge-ResumeAnalyzer/1.0", Accept: "application/pdf,text/plain,text/html" },
-    validateStatus: (s) => s >= 200 && s < 300,
-  }).catch(() => null);
-  if (!res) throw new ApiError(httpStatus.BAD_REQUEST, "Could not fetch that URL. Check it is public and points to a resume file.");
-  const mime = String(res.headers?.["content-type"] ?? "");
-  const buf = Buffer.from(res.data as ArrayBuffer);
-  if (/pdf/i.test(mime) || url.pathname.toLowerCase().endsWith(".pdf")) {
-    const text = extractPdfText(buf);
-    if (text.length < 50) throw new ApiError(httpStatus.UNPROCESSABLE_ENTITY, "No extractable text found (scanned PDF?). Upload a text-based PDF instead.");
-    return { text: text.slice(0, 30000), mime: "application/pdf" };
+/** Robust text-based PDF extractor using pdf-parse with fallback */
+export async function extractPdfText(buf: Buffer): Promise<string> {
+  try {
+    const { PDFParse } = await import("pdf-parse");
+    const parser = new PDFParse({ data: buf });
+    const res = await parser.getText();
+    await parser.destroy();
+    const text = typeof res === "string" ? res : ((res as unknown as { text?: string })?.text ?? "");
+    if (text && text.trim().length > 0) {
+      return text.replace(/\s+/g, " ").trim();
+    }
+  } catch {
+    // continue to regex fallback
   }
-  const text = buf.toString("utf-8").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-  if (text.length < 50) throw new ApiError(httpStatus.UNPROCESSABLE_ENTITY, "No resume text found at that URL.");
-  return { text: text.slice(0, 30000), mime: mime || "text/plain" };
-}
 
-/** Minimal text-based PDF extractor (server-side, no execution of uploads). */
-export function extractPdfText(buf: Buffer): string {
+  // Fallback stream extractor
   try {
     const raw = buf.toString("latin1");
     const out: string[] = [];
@@ -59,6 +64,118 @@ export function extractPdfText(buf: Buffer): string {
   } catch {
     return "";
   }
+}
+
+export async function fetchResumeUrlText(raw: string): Promise<{ text: string; mime: string }> {
+  const url = assertSafeResumeUrl(raw);
+  const res = await axios.get(url.toString(), {
+    timeout: 20000,
+    maxContentLength: MAX_FETCH_BYTES,
+    maxRedirects: 5,
+    responseType: "arraybuffer",
+    headers: {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+      Accept: "application/pdf,text/plain,text/html,*/*",
+    },
+    validateStatus: (s) => s >= 200 && s < 400,
+  }).catch((err) => {
+    const msg = err?.response?.status === 403 || err?.response?.status === 401
+      ? "Target website requires authentication (e.g. LinkedIn). Please paste your resume text or upload your PDF instead."
+      : "Could not fetch that URL. Ensure the URL is public, accessible, and links directly to a resume.";
+    throw new ApiError(httpStatus.BAD_REQUEST, msg);
+  });
+
+  const mime = String(res.headers?.["content-type"] ?? "");
+  const buf = Buffer.from(res.data as ArrayBuffer);
+
+  if (/pdf/i.test(mime) || url.pathname.toLowerCase().endsWith(".pdf")) {
+    const text = await extractPdfText(buf);
+    if (text.length < 50) {
+      throw new ApiError(httpStatus.UNPROCESSABLE_ENTITY, "No extractable text found (scanned PDF?). Upload a text-based PDF or paste text directly.");
+    }
+    return { text: text.slice(0, 30000), mime: "application/pdf" };
+  }
+
+  // HTML cleanup
+  let text = buf.toString("utf-8");
+  text = text.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, " ");
+  text = text.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, " ");
+  text = text.replace(/<nav\b[^<]*(?:(?!<\/nav>)<[^<]*)*<\/nav>/gi, " ");
+  text = text.replace(/<footer\b[^<]*(?:(?!<\/footer>)<[^<]*)*<\/footer>/gi, " ");
+  text = text.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+
+  if (text.length < 50) {
+    throw new ApiError(httpStatus.UNPROCESSABLE_ENTITY, "No readable resume text found at that URL. Please paste text directly or upload a PDF.");
+  }
+  return { text: text.slice(0, 30000), mime: mime || "text/plain" };
+}
+
+/** Extracts text from uploaded files (PDF, Images via Vision OCR, Text files) */
+export async function extractUploadedFileText(payload: {
+  fileBase64: string;
+  fileName: string;
+  fileMime: string;
+}): Promise<{ text: string; fileName: string; fileMime: string }> {
+  const buf = Buffer.from(payload.fileBase64, "base64");
+  const isPdf = /pdf/i.test(payload.fileMime) || payload.fileName.toLowerCase().endsWith(".pdf");
+  const isImage = /^image\//i.test(payload.fileMime) || /\.(png|jpe?g|webp)$/i.test(payload.fileName);
+
+  if (isPdf) {
+    const text = await extractPdfText(buf);
+    if (text.length < 40) {
+      throw new ApiError(
+        httpStatus.UNPROCESSABLE_ENTITY,
+        "Could not extract text from this PDF (it might be an image scan). Please paste your resume text or upload a text-based PDF."
+      );
+    }
+    return { text: text.slice(0, 30000), fileName: payload.fileName, fileMime: "application/pdf" };
+  }
+
+  if (isImage) {
+    if (config.ai.enabled && config.ai.api_key) {
+      try {
+        const dataUrl = `data:${payload.fileMime || "image/jpeg"};base64,${payload.fileBase64}`;
+        const res = await axios.post(
+          `${config.ai.base_url}/chat/completions`,
+          {
+            model: config.ai.model || "gpt-4o-mini",
+            messages: [
+              {
+                role: "system",
+                content: "You are an expert OCR resume reader. Extract all text content from the resume image accurately. Preserve headings, bullets, dates, contact information, skills, and work history verbatim. Return only the extracted plain text.",
+              },
+              {
+                role: "user",
+                content: [
+                  { type: "text", text: "Transcribe all text from this resume image accurately:" },
+                  { type: "image_url", image_url: { url: dataUrl } },
+                ],
+              },
+            ],
+            max_tokens: 3000,
+          },
+          { timeout: 35000, headers: { Authorization: `Bearer ${config.ai.api_key}` } }
+        );
+        const text = String(res.data?.choices?.[0]?.message?.content ?? "").trim();
+        if (text.length >= 40) {
+          return { text: text.slice(0, 30000), fileName: payload.fileName, fileMime: payload.fileMime };
+        }
+      } catch {
+        // continue to error
+      }
+    }
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Image resume uploaded. To parse image resumes, ensure AI is connected or upload a PDF/text file."
+    );
+  }
+
+  // Plain text / Markdown
+  const text = buf.toString("utf-8").trim();
+  if (text.length < 30) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "The file does not contain sufficient text (min 30 characters).");
+  }
+  return { text: text.slice(0, 30000), fileName: payload.fileName, fileMime: payload.fileMime || "text/plain" };
 }
 
 const createAnalysis = async (user: IAuthUser, payload: {

@@ -24,7 +24,16 @@ import {
   Upload,
   Layers,
   ChevronRight,
+  Save,
+  Lock,
+  LogIn,
+  Eye,
+  Sliders,
+  Image as ImageIcon,
+  Palette,
+  Type,
 } from "lucide-react";
+import { useAuthStore } from "@/store/auth";
 import { Card, CardBody, CardHeader, PageHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -127,6 +136,13 @@ export default function EditResumePage() {
   const [designTab, setDesignTab] = useState<"content" | "design">("content");
   const [saveState, setSaveState] = useState<SaveState>("idle");
 
+  // Auth gate for saving
+  const user = useAuthStore((s) => s.user);
+  const accessToken = useAuthStore((s) => s.accessToken);
+  const isLoggedIn = Boolean(accessToken && user);
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
+  const [mobileTab, setMobileTab] = useState<"editor" | "preview">("editor");
+
   // Modals & Drawers
   const [tailorModalOpen, setTailorModalOpen] = useState(false);
   const [atsModalOpen, setAtsModalOpen] = useState(false);
@@ -162,6 +178,15 @@ export default function EditResumePage() {
       toast.error(getErrorMessage(e));
     }
   }, [resumeId]);
+
+  const handleSaveClick = async () => {
+    if (!isLoggedIn) {
+      setLoginModalOpen(true);
+      return;
+    }
+    await flush();
+    toast.success("Resume saved successfully to your account!");
+  };
 
   /** Stage a change and debounce the PATCH (1.2s after the last keystroke). */
   const stage = useCallback(
@@ -388,9 +413,15 @@ export default function EditResumePage() {
   };
 
   const designPanel = (
-    <div className="space-y-5">
+    <div className="space-y-6">
+      {/* Template picker */}
       <div>
-        <p className="mb-2 text-sm font-semibold">Select ATS-Optimized Template — {template.name}</p>
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-sm font-semibold">Select Template Layout — {template.name}</p>
+          <Badge tone={template.atsSafe ? "green" : "amber"} size="sm">
+            {template.atsSafe ? "ATS-Safe" : "Creative"}
+          </Badge>
+        </div>
         <div className="grid max-h-72 grid-cols-2 gap-2 overflow-y-auto thin-scrollbar md:grid-cols-3">
           {ALL_TEMPLATES.map((t) => (
             <button
@@ -412,8 +443,8 @@ export default function EditResumePage() {
                 <span className="mt-1 block h-1 w-full rounded bg-slate-300 dark:bg-slate-700" />
                 <span className="mt-0.5 block h-1 w-2/3 rounded bg-slate-300 dark:bg-slate-700" />
               </span>
-              <span className="block font-medium">{t.name}</span>
-              <span className="block text-muted-foreground">{t.category}</span>
+              <span className="block font-medium truncate">{t.name}</span>
+              <span className="block text-muted-foreground text-[10px] truncate">{t.category}</span>
             </button>
           ))}
         </div>
@@ -422,7 +453,8 @@ export default function EditResumePage() {
         ) : null}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      {/* Typography & Accent Color */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 border-t border-border pt-4">
         <div>
           <label className="field-label" htmlFor="accent-color">
             Accent color
@@ -452,6 +484,7 @@ export default function EditResumePage() {
             </Button>
           </div>
         </div>
+
         <div>
           <label className="field-label">Font size</label>
           <div className="flex gap-1.5">
@@ -465,13 +498,14 @@ export default function EditResumePage() {
                   setCustomization(next);
                   stage({ customization: next });
                 }}
-                className="capitalize"
+                className="capitalize text-xs"
               >
                 {s}
               </Button>
             ))}
           </div>
         </div>
+
         <div>
           <label className="field-label">Spacing density</label>
           <div className="flex gap-1.5">
@@ -485,12 +519,224 @@ export default function EditResumePage() {
                   setCustomization(next);
                   stage({ customization: next });
                 }}
-                className="capitalize"
+                className="capitalize text-xs"
               >
                 {s}
               </Button>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* Line & Header Customization (Item 1: Fully Customizable) */}
+      <div className="rounded-xl border border-border bg-muted/20 p-4 space-y-4">
+        <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+          <Sliders className="size-3.5" /> Section &amp; Line Styling (Full Customization)
+        </p>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label className="field-label">Section Divider Line Style</label>
+            <div className="flex flex-wrap gap-1.5">
+              {(["solid", "dashed", "dotted", "double", "none"] as const).map((style) => (
+                <button
+                  key={style}
+                  type="button"
+                  onClick={() => {
+                    const next = { ...customization, lineStyle: style };
+                    setCustomization(next);
+                    stage({ customization: next });
+                  }}
+                  className={`rounded-md border px-2.5 py-1 text-xs capitalize transition-colors ${
+                    (customization.lineStyle ?? "solid") === style
+                      ? "border-primary-600 bg-primary-50 font-bold text-primary-800 dark:bg-primary-950 dark:text-primary-300"
+                      : "border-border bg-card text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  {style === "none" ? "None (Borderless)" : style}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="field-label">Divider Line Thickness</label>
+            <div className="flex gap-1.5">
+              {(["thin", "medium", "thick"] as const).map((th) => (
+                <button
+                  key={th}
+                  type="button"
+                  onClick={() => {
+                    const next = { ...customization, lineThickness: th };
+                    setCustomization(next);
+                    stage({ customization: next });
+                  }}
+                  className={`flex-1 rounded-md border py-1 text-xs capitalize transition-colors text-center ${
+                    (customization.lineThickness ?? "medium") === th
+                      ? "border-primary-600 bg-primary-50 font-bold text-primary-800 dark:bg-primary-950 dark:text-primary-300"
+                      : "border-border bg-card text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  {th}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="field-label">Section Header Styling</label>
+            <div className="flex flex-wrap gap-1.5">
+              {([
+                { key: "underlined", label: "Underlined" },
+                { key: "left-bar", label: "Left Accent Bar" },
+                { key: "badge", label: "Badge Pill" },
+                { key: "top-bottom", label: "Top & Bottom" },
+                { key: "plain", label: "Plain Text" },
+              ] as const).map((h) => (
+                <button
+                  key={h.key}
+                  type="button"
+                  onClick={() => {
+                    const next = { ...customization, headerStyle: h.key };
+                    setCustomization(next);
+                    stage({ customization: next });
+                  }}
+                  className={`rounded-md border px-2 py-1 text-xs transition-colors ${
+                    (customization.headerStyle ?? "underlined") === h.key
+                      ? "border-primary-600 bg-primary-50 font-bold text-primary-800 dark:bg-primary-950 dark:text-primary-300"
+                      : "border-border bg-card text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  {h.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="field-label">Section Gap (Vertical Margin)</label>
+            <div className="flex gap-1.5">
+              {(["compact", "normal", "relaxed"] as const).map((g) => (
+                <button
+                  key={g}
+                  type="button"
+                  onClick={() => {
+                    const next = { ...customization, sectionSpacing: g };
+                    setCustomization(next);
+                    stage({ customization: next });
+                  }}
+                  className={`flex-1 rounded-md border py-1 text-xs capitalize transition-colors text-center ${
+                    (customization.sectionSpacing ?? "normal") === g
+                      ? "border-primary-600 bg-primary-50 font-bold text-primary-800 dark:bg-primary-950 dark:text-primary-300"
+                      : "border-border bg-card text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  {g}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Card Contours */}
+        <div className="flex items-center gap-2 pt-1 border-t border-border">
+          <input
+            id="show-borders-toggle"
+            type="checkbox"
+            checked={Boolean(customization.showBorders)}
+            onChange={(e) => {
+              const next = { ...customization, showBorders: e.target.checked };
+              setCustomization(next);
+              stage({ customization: next });
+            }}
+            className="rounded border-border text-primary-600 focus:ring-primary-500"
+          />
+          <label htmlFor="show-borders-toggle" className="text-xs font-medium text-foreground cursor-pointer">
+            Display subtle cards with borders around experience and project items
+          </label>
+        </div>
+      </div>
+
+      {/* Profile Photo Customizer */}
+      <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+        <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+          <ImageIcon className="size-3.5" /> Profile Photo / Avatar (for Photo Templates &amp; Biographies)
+        </p>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <label className="field-label" htmlFor="photo-url-input">Photo Image URL</label>
+            <Input
+              id="photo-url-input"
+              value={customization.photoUrl ?? ""}
+              onChange={(e) => {
+                const next = { ...customization, photoUrl: e.target.value || undefined };
+                setCustomization(next);
+                stage({ customization: next });
+              }}
+              placeholder="https://example.com/avatar.jpg"
+            />
+          </div>
+
+          <div>
+            <label className="field-label">Avatar Shape</label>
+            <div className="flex gap-2">
+              {(["circle", "rounded", "square"] as const).map((shape) => (
+                <button
+                  key={shape}
+                  type="button"
+                  onClick={() => {
+                    const next = { ...customization, photoShape: shape };
+                    setCustomization(next);
+                    stage({ customization: next });
+                  }}
+                  className={`flex-1 rounded-md border py-1.5 text-xs capitalize transition-colors ${
+                    (customization.photoShape ?? "circle") === shape
+                      ? "border-primary-600 bg-primary-50 font-bold text-primary-800 dark:bg-primary-950 dark:text-primary-300"
+                      : "border-border bg-card text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  {shape}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Section Title Renamer (Line by line customization) */}
+      <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+        <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+          <Type className="size-3.5" /> Customize Section Heading Titles
+        </p>
+        <p className="text-xs text-muted-foreground">Rename any section title to match your target industry (e.g. "Work History", "Core Competencies", "Key Projects"):</p>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {[
+            { key: "summary", default: "Professional Summary" },
+            { key: "experience", default: "Work Experience" },
+            { key: "skills", default: "Technical Skills" },
+            { key: "projects", default: "Applied Projects" },
+            { key: "education", default: "Education" },
+            { key: "certifications", default: "Certifications & Credentials" },
+          ].map((sec) => (
+            <div key={sec.key}>
+              <label className="field-label capitalize">{sec.key} Heading</label>
+              <Input
+                value={customization.sectionTitles?.[sec.key] ?? ""}
+                placeholder={sec.default}
+                onChange={(e) => {
+                  const updatedTitles = {
+                    ...(customization.sectionTitles ?? {}),
+                    [sec.key]: e.target.value,
+                  };
+                  const next = { ...customization, sectionTitles: updatedTitles };
+                  setCustomization(next);
+                  stage({ customization: next });
+                }}
+              />
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -537,6 +783,12 @@ export default function EditResumePage() {
               <span className="text-muted-foreground hidden sm:inline">· {atsResult.rating}</span>
             </button>
 
+            {!isLoggedIn && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-900">
+                <Lock className="size-3" /> Guest Mode (Login to save)
+              </span>
+            )}
+
             <span className="hidden lg:inline text-xs text-muted-foreground">
               {template.name} ({template.layout})
             </span>
@@ -548,6 +800,21 @@ export default function EditResumePage() {
               <Link href="/resume-dashboard">
                 <ArrowLeft className="size-4 mr-1" /> My Resumes
               </Link>
+            </Button>
+
+            {/* Save to Account / Save Resume Button (Item 9) */}
+            <Button
+              size="sm"
+              onClick={handleSaveClick}
+              className={
+                isLoggedIn
+                  ? "bg-primary-600 hover:bg-primary-700 text-white shadow-xs"
+                  : "bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-xs"
+              }
+              loading={saveState === "saving"}
+            >
+              {isLoggedIn ? <Save className="size-4 mr-1.5" /> : <Lock className="size-4 mr-1.5" />}
+              {isLoggedIn ? "Save Resume" : "Save to Account"}
             </Button>
 
             <Button
@@ -592,9 +859,37 @@ export default function EditResumePage() {
         }
       />
 
+      {/* Mobile responsive view switcher (Item 2: Fully Responsive) */}
+      <div className="flex xl:hidden rounded-lg border border-border bg-muted/40 p-1 mb-4 shadow-xs">
+        <button
+          type="button"
+          onClick={() => setMobileTab("editor")}
+          className={cn(
+            "flex-1 py-2 text-xs font-semibold rounded-md transition-all flex items-center justify-center gap-1.5",
+            mobileTab === "editor"
+              ? "bg-background text-foreground shadow-xs font-bold"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <FileText className="size-3.5" /> Resume Editor
+        </button>
+        <button
+          type="button"
+          onClick={() => setMobileTab("preview")}
+          className={cn(
+            "flex-1 py-2 text-xs font-semibold rounded-md transition-all flex items-center justify-center gap-1.5",
+            mobileTab === "preview"
+              ? "bg-background text-foreground shadow-xs font-bold"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <Eye className="size-3.5" /> Live Preview ({atsResult.score} ATS)
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
         {/* ---------------- Editor Left Panel ---------------- */}
-        <Card className="shadow-sm">
+        <Card className={cn("shadow-sm", mobileTab === "preview" ? "hidden xl:block" : "block")}>
           <CardBody className="p-0">
             {/* Top Navigation switch */}
             <div className="flex border-b border-border bg-muted/20">
@@ -659,7 +954,12 @@ export default function EditResumePage() {
         </Card>
 
         {/* ---------------- Live Preview Right Panel ---------------- */}
-        <div className="space-y-3 xl:sticky xl:top-4 xl:self-start">
+        <div
+          className={cn(
+            "space-y-3 xl:sticky xl:top-4 xl:self-start",
+            mobileTab === "editor" ? "hidden xl:block" : "block"
+          )}
+        >
           <Card className="shadow-sm">
             <CardHeader
               title="A4 Live Preview"
@@ -912,6 +1212,57 @@ export default function EditResumePage() {
             >
               <Check className="size-4 mr-1.5" /> Accept & Apply to Resume
             </Button>
+          </div>
+        </ModalContent>
+      </Modal>
+
+      {/* ---------------- Login Required to Save Modal (Item 9) ---------------- */}
+      <Modal open={loginModalOpen} onOpenChange={setLoginModalOpen}>
+        <ModalContent size="md">
+          <ModalHeader>
+            <span className="flex items-center gap-2 text-lg font-bold">
+              <Lock className="size-5 text-emerald-600" /> Save Resume to Your Account
+            </span>
+            <span className="text-sm text-muted-foreground">
+              Sign in or create a free account to permanently save this resume to your dashboard and access it anytime.
+            </span>
+          </ModalHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-4 dark:border-emerald-900 dark:bg-emerald-950/40 space-y-2">
+              <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+                <CheckCircle2 className="size-4" /> Your progress is currently safe in this browser!
+              </p>
+              <p className="text-xs text-muted-foreground">
+                You can continue customizing, testing AI prompts, and exporting PDFs without logging in. To sync across multiple devices and keep multiple versions, link this resume to your account.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Button asChild className="w-full bg-primary-600 hover:bg-primary-700">
+                <Link href={`/login?redirectTo=${encodeURIComponent(`/resume-builder/${resumeId}/edit`)}`}>
+                  <LogIn className="size-4 mr-1.5" /> Sign In to Account
+                </Link>
+              </Button>
+
+              <Button asChild variant="outline" className="w-full">
+                <Link href={`/register?redirectTo=${encodeURIComponent(`/resume-builder/${resumeId}/edit`)}`}>
+                  Create Free SkillGauge Account
+                </Link>
+              </Button>
+
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  handleExportJson();
+                  setLoginModalOpen(false);
+                }}
+                className="w-full text-xs text-muted-foreground hover:text-foreground"
+              >
+                <Download className="size-3.5 mr-1.5" /> Or Download Local JSON Backup
+              </Button>
+            </div>
           </div>
         </ModalContent>
       </Modal>

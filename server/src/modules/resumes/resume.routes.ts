@@ -7,7 +7,7 @@ import {
   createResumeSchema, updateResumeSchema, resumeParamsSchema, resumeListQuerySchema,
   duplicateResumeSchema, createVersionSchema, createJobSchema, updateJobSchema, jobParamsSchema,
   createAnalysisSchema, analysisParamsSchema, analysisListQuerySchema, aiAssistSchema, fetchUrlSchema,
-  publicResumeParamsSchema,
+  publicResumeParamsSchema, extractFileSchema,
 } from "./resume.validation";
 
 const router = express.Router();
@@ -46,9 +46,10 @@ router.post("/jobs", validate(createJobSchema), ResumeController.createJob);
 router.patch("/jobs/:jobId", validate(updateJobSchema), ResumeController.updateJob);
 router.delete("/jobs/:jobId", validate(jobParamsSchema), ResumeController.deleteJob);
 
-// AI assist + URL intake
+// AI assist + URL & file intake
 router.post("/ai/assist", aiLimiter, validate(aiAssistSchema), ResumeController.aiAssist);
 router.post("/fetch-url", aiLimiter, validate(fetchUrlSchema), ResumeController.fetchUrl);
+router.post("/extract-file", aiLimiter, validate(extractFileSchema), ResumeController.extractFile);
 
 export const ResumeRouter = router;
 

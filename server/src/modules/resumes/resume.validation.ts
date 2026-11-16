@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const personalInfoSchema = z.object({
-  fullName: z.string().min(1).max(120),
+  fullName: z.string().max(120).default(""),
   title: z.string().max(120).optional().default(""),
   email: z.string().email().max(160).or(z.literal("")),
   phone: z.string().max(40).optional().default(""),
@@ -34,12 +34,15 @@ const educationSchema = z.object({
 
 const projectSchema = z.object({
   id: z.string().max(64).optional(),
-  name: z.string().min(1).max(160),
-  description: z.string().max(1200).optional().default(""),
-  technologies: z.array(z.string().max(60)).max(30).default([]),
+  name: z.string().max(160).default(""),
+  description: z.string().max(2000).optional().default(""),
+  descriptionType: z.enum(["paragraph", "bullets"]).optional().default("paragraph"),
+  icon: z.string().max(30).optional().default(""),
+  technologies: z.array(z.string().max(60)).max(50).default([]),
+  techPosition: z.enum(["inline", "right", "bottom"]).optional().default("inline"),
   url: z.string().max(255).optional().default(""),
   githubUrl: z.string().max(255).optional().default(""),
-  outcomes: z.string().max(600).optional().default(""),
+  outcomes: z.string().max(800).optional().default(""),
 });
 
 const skillGroupSchema = z.object({
@@ -77,6 +80,14 @@ export const customizationSchema = z.object({
   accentColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
   spacing: z.enum(["compact", "normal", "relaxed"]).optional(),
   fontSize: z.enum(["small", "medium", "large"]).optional(),
+  lineStyle: z.enum(["solid", "dashed", "dotted", "double", "none"]).optional(),
+  lineThickness: z.enum(["thin", "medium", "thick"]).optional(),
+  headerStyle: z.enum(["underlined", "left-bar", "badge", "plain", "top-bottom"]).optional(),
+  sectionTitles: z.record(z.string(), z.string()).optional(),
+  sectionSpacing: z.enum(["compact", "normal", "relaxed"]).optional(),
+  showBorders: z.boolean().optional(),
+  photoUrl: z.string().max(1000000).optional(),
+  photoShape: z.enum(["circle", "rounded", "square"]).optional(),
 }).partial();
 
 export type ResumeContent = z.infer<typeof resumeContentSchema>;
@@ -206,6 +217,14 @@ export const aiAssistSchema = z.object({
 export const fetchUrlSchema = z.object({
   body: z.object({
     url: z.string().url("Must be a valid http(s) URL").max(500),
+  }).strict(),
+});
+
+export const extractFileSchema = z.object({
+  body: z.object({
+    fileBase64: z.string().min(1).max(25 * 1024 * 1024),
+    fileName: z.string().max(255),
+    fileMime: z.string().max(120),
   }).strict(),
 });
 

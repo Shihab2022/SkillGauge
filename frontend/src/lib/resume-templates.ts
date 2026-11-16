@@ -21,7 +21,7 @@ export interface ResumeTemplate {
   atsNote?: string;
   accent: string;
   font: "serif" | "sans" | "mono" | "display";
-  layout: "single" | "sidebar-left" | "header-band" | "two-col" | "centered" | "ruled" | "executive";
+  layout: "single" | "sidebar-left" | "header-band" | "two-col" | "centered" | "ruled" | "executive" | "photo" | "borderless" | "cards";
 }
 
 export const TEMPLATES: ResumeTemplate[] = [
@@ -38,6 +38,11 @@ export const TEMPLATES: ResumeTemplate[] = [
 ];
 
 export const TEMPLATES_EXTRA: ResumeTemplate[] = [
+  { id: "modern-avatar-01", name: "Nova Profile Avatar", category: "Modern Professional", description: "Modern layout with profile headshot avatar and clean sans typography.", atsSafe: true, accent: "#0284c7", font: "sans", layout: "photo" },
+  { id: "photo-executive-02", name: "Executive Portrait", category: "Executive", description: "Senior leadership layout with executive headshot masthead.", atsSafe: false, atsNote: "Headshot layouts are ideal for executive bios and direct recruiter outreach.", accent: "#0f172a", font: "serif", layout: "photo" },
+  { id: "borderless-clean-01", name: "Pure Borderless", category: "Minimalist", description: "Clean whitespace layout with no dividing lines or borders.", atsSafe: true, accent: "#18181b", font: "sans", layout: "borderless" },
+  { id: "borderless-nordic-02", name: "Nordic Borderless", category: "Minimalist", description: "Soft emerald Scandinavian typography, 100% border-free.", atsSafe: true, accent: "#059669", font: "sans", layout: "borderless" },
+  { id: "cards-modern-01", name: "Modular Cards", category: "Modern Professional", description: "Contemporary card-based blocks with subtle contours and badges.", atsSafe: true, accent: "#4338ca", font: "sans", layout: "cards" },
   { id: "creative-muse-01", name: "Muse Creative", category: "Creative", description: "Editorial display type for design portfolios.", atsSafe: false, atsNote: "Decorative layout — not for ATS portals. Export PDF for email/direct sends.", accent: "#db2777", font: "display", layout: "centered" },
   { id: "creative-studio-02", name: "Studio Creative", category: "Creative", description: "Bold band with card-style sections.", atsSafe: false, atsNote: "Card blocks may not parse — keep an ATS twin for portals.", accent: "#7c3aed", font: "display", layout: "header-band" },
   { id: "tech-terminal-01", name: "Terminal Engineer", category: "Technical", description: "Monospace developer sheet with skill chips.", atsSafe: true, accent: "#065f46", font: "mono", layout: "single" },
@@ -62,15 +67,21 @@ export function templateStyle(t: ResumeTemplate, c?: ResumeCustomization | null)
   const accent = c?.accentColor ?? t.accent;
   const spacing = c?.spacing ?? "normal";
   const size = c?.fontSize ?? "medium";
+  const lineStyle = c?.lineStyle ?? (t.layout === "borderless" ? "none" : "solid");
+  const lineThickness = c?.lineThickness === "thick" ? "2.5px" : c?.lineThickness === "thin" ? "1px" : "1.5px";
   const fontFamily =
     t.font === "serif" ? "Georgia, 'Times New Roman', serif"
     : t.font === "mono" ? "ui-monospace, SFMono-Regular, Menlo, monospace"
     : t.font === "display" ? "'Segoe UI', Verdana, sans-serif"
     : "Inter, 'Segoe UI', Arial, sans-serif";
   return {
-    "--accent": accent, fontFamily,
+    "--accent": accent,
+    fontFamily,
     fontSize: size === "small" ? "12.5px" : size === "large" ? "14.5px" : "13.5px",
     lineHeight: spacing === "compact" ? 1.35 : spacing === "relaxed" ? 1.7 : 1.5,
+    "--line-style": lineStyle,
+    "--line-thickness": lineThickness,
+    "--section-gap": c?.sectionSpacing === "compact" ? "12px" : c?.sectionSpacing === "relaxed" ? "24px" : "18px",
   } as React.CSSProperties;
 }
 

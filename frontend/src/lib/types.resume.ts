@@ -42,7 +42,10 @@ export interface ResumeProject {
   id?: string;
   name: string;
   description: string;
+  descriptionType?: "paragraph" | "bullets";
+  icon?: string;
   technologies: string[];
+  techPosition?: "inline" | "right" | "bottom";
   url: string;
   githubUrl: string;
   outcomes: string;
@@ -82,6 +85,14 @@ export interface ResumeCustomization {
   accentColor?: string;
   spacing?: "compact" | "normal" | "relaxed";
   fontSize?: "small" | "medium" | "large";
+  lineStyle?: "solid" | "dashed" | "dotted" | "double" | "none";
+  lineThickness?: "thin" | "medium" | "thick";
+  headerStyle?: "underlined" | "left-bar" | "badge" | "plain" | "top-bottom";
+  sectionTitles?: Record<string, string>;
+  sectionSpacing?: "compact" | "normal" | "relaxed";
+  showBorders?: boolean;
+  photoUrl?: string;
+  photoShape?: "circle" | "rounded" | "square";
 }
 
 export type ResumeStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";

@@ -12,12 +12,14 @@ import { ROLE_PRESETS } from "@/lib/resume-presets";
 import { cn } from "@/lib/utils";
 import { Sparkles, Zap, FileText, Upload } from "lucide-react";
 import type { ResumeContent } from "@/lib/types.resume";
+import { useAuthStore } from "@/store/auth";
 
 export default function NewResumePage() {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [targetRole, setTargetRole] = useState("Full-Stack Engineer");
   const [templateId, setTemplateId] = useState("ats-classic-01");
+  const user = useAuthStore((s) => s.user);
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>("full-stack");
   const [pending, setPending] = useState(false);
 
@@ -45,6 +47,9 @@ export default function NewResumePage() {
     setPending(true);
     try {
       let initialContent: ResumeContent = emptyResumeContent();
+      if (user?.name) {
+        initialContent.personal.fullName = user.name;
+      }
 
       if (selectedPresetId) {
         const found = ROLE_PRESETS.find((p) => p.id === selectedPresetId);

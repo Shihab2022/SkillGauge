@@ -19,8 +19,8 @@ type SourceTab = "resume" | "text" | "file" | "url";
 
 const SOURCE_TABS: { key: SourceTab; label: string; icon: React.ElementType }[] = [
   { key: "resume", label: "My resume", icon: FileText },
+  { key: "file", label: "Upload PDF / Photo / Text", icon: Upload },
   { key: "text", label: "Paste text", icon: ScanSearch },
-  { key: "file", label: "Upload .txt", icon: Upload },
   { key: "url", label: "Resume URL", icon: Link2 },
 ];
 
@@ -60,15 +60,67 @@ export default function ResumeAnalyzerPage() {
   );
   const jobOptions = useMemo(() => jobs.map((j) => ({ value: j.id, label: `${j.title}${j.company ? ` — ${j.company}` : ""}` })), [jobs]);
 
-  const onPickFile = (file: File | null) => {
+  const [fileMime, setFileMime] = useState<string | null>(null);
+  const [extractingFile, setExtractingFile] = useState(false);
+
+  const onPickFile = async (file: File | null) => {
     if (!file) return;
-    if (!/text\/|\.(txt|md)$/i.test(file.type || file.name)) {
-      toast.error("Plain text only here — for PDFs paste the text or use the URL tab");
+
+    const name = file.name;
+    const type = file.type || "";
+    const isText = /text\/|\.(txt|md)$/i.test(type || name);
+    const isPdf = /application\/pdf/i.test(type) || /\.pdf$/i.test(name);
+    const isImage = /^image\//i.test(type) || /\.(png|jpe?g|webp)$/i.test(name);
+
+    if (!isText && !isPdf && !isImage) {
+      toast.error("Unsupported file type. Please upload a PDF (.pdf), Photo (.jpg, .png), or Text (.txt, .md) file.");
       return;
     }
+
+    if (file.size > 15 * 1024 * 1024) {
+      toast.error("File is too large (max 15MB).");
+      return;
+    }
+
+    setFileName(name);
+    setFileMime(type || (isPdf ? "application/pdf" : isText ? "text/plain" : "image/jpeg"));
+
+    if (isText) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const res = String(reader.result ?? "");
+        setText(res);
+        toast.success(`Loaded ${name} (${res.length} characters)`);
+      };
+      reader.readAsText(file);
+      return;
+    }
+
+    // For PDF and images: send base64 to server extraction endpoint
+    setExtractingFile(true);
     const reader = new FileReader();
-    reader.onload = () => { setText(String(reader.result ?? "")); setFileName(file.name); };
-    reader.readAsText(file);
+    reader.onerror = () => {
+      setExtractingFile(false);
+      toast.error("Failed to read file.");
+    };
+    reader.onload = async () => {
+      try {
+        const raw = String(reader.result ?? "");
+        const base64Data = raw.includes(",") ? raw.split(",")[1]! : raw;
+        const res = await resumesApi.extractFile({
+          fileBase64: base64Data,
+          fileName: name,
+          fileMime: type || (isPdf ? "application/pdf" : "image/jpeg"),
+        });
+        setText(res.text);
+        toast.success(`Successfully extracted text from ${name}!`);
+      } catch (err) {
+        toast.error(getErrorMessage(err));
+      } finally {
+        setExtractingFile(false);
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const onFetchUrl = async () => {
@@ -180,23 +232,54 @@ export default function ResumeAnalyzerPage() {
               )
             ) : null}
 
-            {sourceTab === "text" || sourceTab === "file" ? (
-              <div className="space-y-2">
-                {sourceTab === "file" ? (
-                  <div>
-                    <label className="field-label" htmlFor="resume-file">Upload (.txt / .md)</label>
+            {sourceTab === "file" ? (
+              <div className="space-y-3">
+                <div className="rounded-xl border-2 border-dashed border-border hover:border-primary-400 p-6 text-center transition-colors bg-card/50">
+                  <Upload className="mx-auto size-8 text-muted-foreground mb-2" />
+                  <p className="text-sm font-semibold text-foreground">Upload Resume (PDF, Photo, or Text)</p>
+                  <p className="text-xs text-muted-foreground mt-1 mb-3">
+                    Supported formats: PDF (.pdf), Photos (.png, .jpg, .jpeg, .webp), and Text (.txt, .md) up to 15MB
+                  </p>
+                  <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-primary-600 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-primary-700 transition-colors">
+                    <span>Browse Files</span>
                     <input
                       id="resume-file"
                       type="file"
-                      accept=".txt,.md,text/plain,text/markdown"
+                      accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.md,application/pdf,image/png,image/jpeg,image/webp,text/plain,text/markdown"
                       onChange={(e) => onPickFile(e.target.files?.[0] ?? null)}
-                      className="block w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-primary-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-primary-700 hover:file:bg-primary-100"
+                      className="sr-only"
                     />
-                    <p className="field-hint">PDF/DOCX: open them, copy the text and use the “Paste text” tab, or publish it and use “Resume URL”.</p>
-                  </div>
-                ) : null}
+                  </label>
+                  {fileName && (
+                    <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-xs font-medium text-foreground">
+                      <FileText className="size-3.5 text-primary-600" />
+                      <span>{fileName}</span>
+                    </div>
+                  )}
+                  {extractingFile && (
+                    <div className="mt-3 flex items-center justify-center gap-2 text-xs text-primary-600 font-medium">
+                      <Spinner className="size-4" />
+                      <span>Extracting text from document...</span>
+                    </div>
+                  )}
+                </div>
+
                 <TextareaField
-                  label={sourceTab === "text" ? "Resume text" : fileName ? `Extracted from ${fileName}` : "Resume text"}
+                  label={fileName ? `Extracted Content from ${fileName}` : "Resume text"}
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  rows={8}
+                  maxLength={30000}
+                  placeholder="Extracted text will appear here. You can also edit it directly before scoring..."
+                  hint={`${text.length}/30000 characters · minimum 50 required for analysis`}
+                />
+              </div>
+            ) : null}
+
+            {sourceTab === "text" ? (
+              <div className="space-y-2">
+                <TextareaField
+                  label="Resume text"
                   value={text}
                   onChange={(e) => setText(e.target.value)}
                   rows={10}
@@ -209,6 +292,10 @@ export default function ResumeAnalyzerPage() {
 
             {sourceTab === "url" ? (
               <div className="space-y-3">
+                <div className="rounded-lg border border-border/80 bg-muted/30 p-3 text-xs text-muted-foreground">
+                  <p className="font-semibold text-foreground mb-1">Resume URL Import Guide</p>
+                  <p>Supports public downloadable URLs, direct PDF links, Google Drive public links, and Dropbox links. Sites requiring authentication (such as private LinkedIn profiles) cannot be crawled directly — please paste your resume text in the "Paste text" tab instead.</p>
+                </div>
                 <div className="flex items-end gap-2">
                   <div className="flex-1">
                     <label className="field-label" htmlFor="resume-url">Public resume URL</label>
@@ -216,7 +303,7 @@ export default function ResumeAnalyzerPage() {
                       id="resume-url"
                       value={url}
                       onChange={(e) => setUrl(e.target.value)}
-                      placeholder="https://…"
+                      placeholder="https://drive.google.com/... or https://domain.com/resume.pdf"
                       className="h-10 w-full rounded-lg border border-input bg-card px-3 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25"
                     />
                   </div>

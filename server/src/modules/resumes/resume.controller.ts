@@ -4,7 +4,7 @@ import catchAsync from "../../helpers/catchAsync";
 import sendResponse from "../../helpers/sendResponse";
 import { AuthRequest } from "../../middlewares/auth";
 import { ResumeServices } from "./resume.service";
-import { AnalysisServices, fetchResumeUrlText } from "./analysis.service";
+import { AnalysisServices, fetchResumeUrlText, extractUploadedFileText } from "./analysis.service";
 import { assistWithAi } from "./ai.service";
 import { SCORING_WEIGHTS } from "./scoring";
 
@@ -108,8 +108,13 @@ const fetchUrl = catchAsync(async (req: AuthRequest, res: Response) => {
   sendResponse(res, { statusCode: httpStatus.OK, message: "Resume text extracted from URL", data });
 });
 
+const extractFile = catchAsync(async (req: AuthRequest, res: Response) => {
+  const data = await extractUploadedFileText(req.body);
+  sendResponse(res, { statusCode: httpStatus.OK, message: "File text extracted successfully", data });
+});
+
 export const ResumeController = {
   scoringModel, listResumes, createResume, getResume, updateResume, deleteResume,
   duplicateResume, listVersions, createVersion, publicResume, createAnalysis,
-  listAnalyses, getAnalysis, deleteAnalysis, listJobs, createJob, updateJob, deleteJob, aiAssist, fetchUrl,
+  listAnalyses, getAnalysis, deleteAnalysis, listJobs, createJob, updateJob, deleteJob, aiAssist, fetchUrl, extractFile,
 };

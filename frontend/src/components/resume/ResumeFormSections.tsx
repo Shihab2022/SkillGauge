@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { ResumeContent } from "@/lib/types.resume";
 import { Textarea, TextField, TextareaField } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -17,8 +17,12 @@ import {
   ListOrdered,
   Layers,
   Wand2,
+  GripVertical,
+  ExternalLink,
+  Github,
 } from "lucide-react";
 import { ACTION_VERBS_BY_CATEGORY } from "@/lib/resume-presets";
+import { searchSkills } from "@/lib/skills-database";
 import { toast } from "sonner";
 
 export const uid = () => Math.random().toString(36).slice(2, 9);
@@ -468,6 +472,69 @@ export function ExperienceSection({ content, onChange, onAssist, targetRole }: S
 
 /* ------------------------------------------------------------- Skills */
 
+function SkillSearchInput({ onAdd }: { onAdd: (skill: string) => void }) {
+  const [query, setQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  const handleChange = (val: string) => {
+    setQuery(val);
+    if (val.trim().length >= 1) {
+      setSuggestions(searchSkills(val, 12));
+      setOpen(true);
+    } else {
+      setSuggestions([]);
+      setOpen(false);
+    }
+  };
+
+  const pick = (skill: string) => {
+    onAdd(skill);
+    setQuery("");
+    setSuggestions([]);
+    setOpen(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if ((e.key === "Enter" || e.key === ",") && query.trim()) {
+      e.preventDefault();
+      const val = query.trim().replace(/,$/, "");
+      if (val) { pick(val); }
+    }
+    if (e.key === "Escape") { setOpen(false); }
+  };
+
+  return (
+    <div ref={ref} className="relative">
+      <input
+        type="text"
+        value={query}
+        onChange={(e) => handleChange(e.target.value)}
+        onKeyDown={handleKeyDown}
+        onFocus={() => query.trim() && setOpen(true)}
+        placeholder="+ Type to search skills, press Enter or , to add..."
+        className="flex-1 w-full min-w-32 bg-transparent text-xs text-foreground focus:outline-none placeholder:text-muted-foreground/60 px-1 py-1"
+      />
+      {open && suggestions.length > 0 && (
+        <div className="absolute top-full left-0 z-50 mt-1 w-full min-w-[200px] rounded-lg border border-border bg-popover shadow-lg max-h-48 overflow-y-auto">
+          {suggestions.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onMouseDown={(e) => { e.preventDefault(); pick(s); }}
+              className="flex w-full items-center gap-2 px-3 py-2 text-xs text-foreground hover:bg-muted text-left transition-colors"
+            >
+              <Plus className="size-3 text-muted-foreground shrink-0" />
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function SkillsSection({ content, onChange, onAssist, targetRole }: SectionProps) {
   const groups = content.skillGroups;
 
@@ -542,10 +609,10 @@ export function SkillsSection({ content, onChange, onAssist, targetRole }: Secti
             </Button>
           </div>
 
-          {/* Interactive Skill Pills */}
+          {/* Interactive Skill Pills + Search */}
           <div>
             <p className="field-label">Skills in this category ({g.skills.length})</p>
-            <div className="flex flex-wrap gap-1.5 min-h-10 p-2 rounded-lg border border-border bg-background">
+            <div className="flex flex-wrap gap-1.5 min-h-10 p-2 rounded-lg border border-border bg-background relative">
               {g.skills.map((skill, skillIdx) => (
                 <span
                   key={skillIdx}
@@ -562,22 +629,9 @@ export function SkillsSection({ content, onChange, onAssist, targetRole }: Secti
                   </button>
                 </span>
               ))}
-              <input
-                type="text"
-                placeholder="+ Type skill and press Enter..."
-                className="flex-1 min-w-32 bg-transparent text-xs text-foreground focus:outline-none placeholder:text-muted-foreground/60 px-1"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === ",") {
-                    e.preventDefault();
-                    const val = e.currentTarget.value.trim().replace(/^,/, "");
-                    if (val) {
-                      addSkillToGroup(i, val);
-                      e.currentTarget.value = "";
-                    }
-                  }
-                }}
-              />
+              <SkillSearchInput onAdd={(skill) => addSkillToGroup(i, skill)} />
             </div>
+            <p className="mt-1 text-[11px] text-muted-foreground">Type to search 500+ skills and press Enter or , to add. Click × to remove.</p>
           </div>
 
           <div className="flex items-center justify-between pt-1">
@@ -704,6 +758,20 @@ export function ProjectsSection({ content, onChange, onAssist }: SectionProps) {
     onChange({ ...content, projects: next });
   };
 
+  const addTech = (idx: number, tech: string) => {
+    const trimmed = tech.trim();
+    if (!trimmed) return;
+    const pr = list[idx]!;
+    if (!pr.technologies.includes(trimmed)) {
+      setItem(idx, { technologies: [...pr.technologies, trimmed] });
+    }
+  };
+
+  const removeTech = (idx: number, techIdx: number) => {
+    const pr = list[idx]!;
+    setItem(idx, { technologies: pr.technologies.filter((_, j) => j !== techIdx) });
+  };
+
   return (
     <div className="space-y-5">
       {list.length === 0 ? (
@@ -727,6 +795,7 @@ export function ProjectsSection({ content, onChange, onAssist }: SectionProps) {
             </Button>
           </div>
 
+          {/* Basic info row */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <TextField
               label="Project name *"
@@ -734,47 +803,154 @@ export function ProjectsSection({ content, onChange, onAssist }: SectionProps) {
               onChange={(ev) => setItem(i, { name: ev.target.value })}
               placeholder="e.g. Distributed Task Orchestrator"
             />
-            <TextField
-              label="Technologies used (comma separated)"
-              value={pr.technologies.join(", ")}
-              onChange={(ev) =>
-                setItem(i, {
-                  technologies: ev.target.value.split(",").map((s) => s.trim()).filter(Boolean),
-                })
-              }
-              placeholder="e.g. React, Node.js, Redis, Docker"
-            />
-            <TextField
-              label="Live URL"
-              value={pr.url}
-              onChange={(ev) => setItem(i, { url: ev.target.value })}
-              placeholder="https://myproject.com"
-            />
-            <TextField
-              label="GitHub Repository"
-              value={pr.githubUrl}
-              onChange={(ev) => setItem(i, { githubUrl: ev.target.value })}
-              placeholder="https://github.com/user/project"
-            />
+            <div className="space-y-1">
+              <label className="field-label">Project Icon (optional)</label>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {["🚀", "💻", "🌐", "📱", "⚡", "🛠️", "📊", "🤖", "🔒", "📦"].map((emoji) => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => setItem(i, { icon: pr.icon === emoji ? "" : emoji })}
+                    className={`size-8 rounded-lg border text-sm flex items-center justify-center transition-colors ${
+                      pr.icon === emoji
+                        ? "border-primary-500 bg-primary-50 dark:bg-primary-950/60 ring-2 ring-primary-500/20"
+                        : "border-border hover:bg-muted"
+                    }`}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-1">
+              <label className="field-label">Live URL</label>
+              <div className="relative">
+                <ExternalLink className="absolute left-2.5 top-2.5 size-3.5 text-muted-foreground" />
+                <input
+                  type="url"
+                  value={pr.url}
+                  onChange={(ev) => setItem(i, { url: ev.target.value })}
+                  placeholder="https://myproject.com"
+                  className="h-9 w-full rounded-lg border border-input bg-card pl-7 pr-3 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25"
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <label className="field-label">GitHub Repository</label>
+              <div className="relative">
+                <Github className="absolute left-2.5 top-2.5 size-3.5 text-muted-foreground" />
+                <input
+                  type="url"
+                  value={pr.githubUrl}
+                  onChange={(ev) => setItem(i, { githubUrl: ev.target.value })}
+                  placeholder="https://github.com/user/project"
+                  className="h-9 w-full rounded-lg border border-input bg-card pl-7 pr-3 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25"
+                />
+              </div>
+            </div>
           </div>
 
-          <div className="space-y-3">
+          {/* Technologies tag pills + position control */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <p className="field-label">Technologies Used ({pr.technologies.length})</p>
+              <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                <span>Layout Position:</span>
+                {(["inline", "right", "bottom"] as const).map((pos) => (
+                  <button
+                    key={pos}
+                    type="button"
+                    onClick={() => setItem(i, { techPosition: pos })}
+                    className={`rounded px-1.5 py-0.5 capitalize transition-colors ${
+                      (pr.techPosition ?? "inline") === pos
+                        ? "bg-primary-100 text-primary-800 dark:bg-primary-950 dark:text-primary-300 font-semibold"
+                        : "hover:bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {pos === "inline" ? "Header Left" : pos === "right" ? "Header Right" : "Bottom"}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1.5 min-h-9 p-2 rounded-lg border border-border bg-background relative">
+              {pr.technologies.map((tech, ti) => (
+                <span
+                  key={ti}
+                  className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-800 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-300"
+                >
+                  {tech}
+                  <button
+                    type="button"
+                    onClick={() => removeTech(i, ti)}
+                    className="text-blue-600 hover:text-destructive"
+                    aria-label={`Remove ${tech}`}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+              <SkillSearchInput onAdd={(skill) => addTech(i, skill)} />
+            </div>
+            <p className="text-[11px] text-muted-foreground">Search or type a technology and press Enter to add. Select layout position above (left, right, bottom).</p>
+          </div>
+
+          {/* Description with format selector */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="field-label">Project Description</label>
+              <div className="flex items-center gap-1 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setItem(i, { descriptionType: "paragraph" })}
+                  className={`rounded px-2 py-0.5 text-xs transition-colors ${
+                    (pr.descriptionType ?? "paragraph") === "paragraph"
+                      ? "bg-primary-100 text-primary-800 dark:bg-primary-950 dark:text-primary-300 font-semibold"
+                      : "text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  Normal Paragraph
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setItem(i, { descriptionType: "bullets" })}
+                  className={`rounded px-2 py-0.5 text-xs transition-colors ${
+                    pr.descriptionType === "bullets"
+                      ? "bg-primary-100 text-primary-800 dark:bg-primary-950 dark:text-primary-300 font-semibold"
+                      : "text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  Bullet Points
+                </button>
+              </div>
+            </div>
+
             <TextareaField
-              label="Description & Architecture"
               value={pr.description}
-              rows={3}
-              maxLength={1200}
-              placeholder="Describe what the project does, key architecture patterns, and technical challenges overcome..."
+              rows={pr.descriptionType === "bullets" ? 4 : 3}
+              maxLength={2000}
+              placeholder={
+                pr.descriptionType === "bullets"
+                  ? "• Engineered microservices using NestJS and Kafka for real-time order processing\n• Implemented Redis caching reducing database read latency by 65%\n• Set up Docker and GitHub Actions CI pipeline with 95% test coverage"
+                  : "Describe what the project does, key architecture patterns, and technical challenges overcome..."
+              }
               onChange={(ev) => setItem(i, { description: ev.target.value })}
+              hint={pr.descriptionType === "bullets" ? "Each line starting with • or text will render as an accomplishment bullet in preview" : undefined}
             />
-            <TextareaField
-              label="Measurable outcomes & impact (metrics)"
-              value={pr.outcomes}
-              rows={2}
-              maxLength={600}
-              placeholder="e.g. 5,000+ monthly active users, sustained 2,000 RPS at 40ms response latency..."
-              onChange={(ev) => setItem(i, { outcomes: ev.target.value })}
-            />
+
+            <div className="space-y-1">
+              <label className="field-label flex items-center justify-between">
+                <span>Measurable outcomes &amp; impact (metrics)</span>
+                <span className="text-[11px] font-normal text-muted-foreground">Optional</span>
+              </label>
+              <textarea
+                value={pr.outcomes}
+                rows={2}
+                maxLength={600}
+                placeholder="e.g. 5,000+ monthly active users, sustained 2,000 RPS at 40ms response latency..."
+                onChange={(ev) => setItem(i, { outcomes: ev.target.value })}
+                className="w-full resize-none rounded-lg border border-input bg-card px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25 placeholder:text-muted-foreground/60"
+              />
+            </div>
           </div>
 
           <div className="flex gap-2 pt-1">
@@ -919,6 +1095,9 @@ export const SECTION_LABELS: Record<string, string> = {
 
 export function SectionOrderControl({ content, onChange }: SectionProps) {
   const order = content.sectionOrder?.length ? content.sectionOrder : Object.keys(SECTION_LABELS);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [overIndex, setOverIndex] = useState<number | null>(null);
+
   const move = (i: number, dir: -1 | 1) => {
     const n = [...order];
     const j = i + dir;
@@ -928,24 +1107,71 @@ export function SectionOrderControl({ content, onChange }: SectionProps) {
     onChange({ ...content, sectionOrder: n });
   };
 
+  const handleDragStart = (e: React.DragEvent, i: number) => {
+    setDragIndex(i);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", String(i));
+  };
+
+  const handleDragOver = (e: React.DragEvent, i: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (overIndex !== i) setOverIndex(i);
+  };
+
+  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault();
+    if (dragIndex === null || dragIndex === targetIndex) {
+      setDragIndex(null);
+      setOverIndex(null);
+      return;
+    }
+    const n = [...order];
+    const [moved] = n.splice(dragIndex, 1);
+    n.splice(targetIndex, 0, moved!);
+    onChange({ ...content, sectionOrder: n });
+    setDragIndex(null);
+    setOverIndex(null);
+    toast.success("Section order updated");
+  };
+
+  const handleDragEnd = () => {
+    setDragIndex(null);
+    setOverIndex(null);
+  };
+
   return (
     <div className="space-y-3">
       <p className="text-xs text-muted-foreground">
-        Drag or reorder how sections appear in the preview and PDF export. Top sections get the most recruiter focus.
+        Drag and drop sections to rearrange their order, or use the arrows. Changes reflect live in the preview and PDF export.
       </p>
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         {order.map((key, i) => (
           <div
             key={key}
-            className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2 text-sm shadow-sm"
+            draggable
+            onDragStart={(e) => handleDragStart(e, i)}
+            onDragOver={(e) => handleDragOver(e, i)}
+            onDrop={(e) => handleDrop(e, i)}
+            onDragEnd={handleDragEnd}
+            className={`flex items-center justify-between rounded-lg border bg-card px-3 py-2.5 text-sm shadow-sm transition-all cursor-grab active:cursor-grabbing ${
+              dragIndex === i
+                ? "opacity-40 border-dashed border-primary-500 scale-[0.98]"
+                : overIndex === i
+                ? "border-primary-500 bg-primary-50/50 dark:bg-primary-950/40 ring-2 ring-primary-500/30"
+                : "border-border hover:border-border/80 hover:shadow"
+            }`}
           >
-            <span className="font-semibold text-foreground flex items-center gap-2">
-              <span className="flex size-5 items-center justify-center rounded bg-muted text-xs text-muted-foreground">
+            <div className="flex items-center gap-2.5 select-none">
+              <GripVertical className="size-4 text-muted-foreground/60 hover:text-foreground cursor-grab" />
+              <span className="flex size-5 items-center justify-center rounded bg-muted text-xs font-semibold text-muted-foreground">
                 {i + 1}
               </span>
-              {SECTION_LABELS[key] ?? key}
-            </span>
-            <div className="flex gap-1">
+              <span className="font-semibold text-foreground">
+                {SECTION_LABELS[key] ?? key}
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
               <Button
                 size="sm"
                 variant="ghost"

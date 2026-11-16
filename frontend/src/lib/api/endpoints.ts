@@ -135,6 +135,7 @@ export const endpoints = {
     jobById: (id: string) => `/resumes/jobs/${id}`,
     assist: "/resumes/ai/assist",
     fetchUrl: "/resumes/fetch-url",
+    extractFile: "/resumes/extract-file",
   },
 
   notifications: {

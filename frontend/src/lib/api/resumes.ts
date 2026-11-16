@@ -102,6 +102,9 @@ export const resumesApi = {
 
   fetchUrl: (url: string) =>
     apiPost<{ text: string; mime: string }>(endpoints.resumes.fetchUrl, { url }, { timeout: 60_000 }),
+
+  extractFile: (payload: { fileBase64: string; fileName: string; fileMime: string }) =>
+    apiPost<{ text: string; fileName: string; fileMime: string }>(endpoints.resumes.extractFile, payload, { timeout: 60_000 }),
 };
 
 export default resumesApi;
