@@ -177,14 +177,18 @@ export const analysisListQuerySchema = z.object({
 
 export const AI_ASSIST_ACTIONS = [
   "improve-bullet",
+  "xyz-bullet",
   "professional-tone",
   "make-concise",
   "highlight-impact",
   "improve-summary",
+  "generate-summary-variations",
+  "generate-role-bullets",
   "fix-grammar",
   "suggest-skills",
   "make-clearer",
   "tailor-to-job",
+  "tailor-bullets",
   "generate-summary",
   "cover-letter",
   "interview-questions",
