@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, Check, Plus, AlertCircle, ArrowRight, Loader2, Target } from "lucide-react";
+import { Sparkles, Check, Plus, AlertCircle, ArrowRight, Loader2, Target, Link2, FileText, CheckCircle2 } from "lucide-react";
 import { Modal, ModalContent, ModalHeader } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { TextareaField, TextField } from "@/components/ui/Input";
@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/Badge";
 import { toast } from "sonner";
 import type { ResumeContent } from "@/lib/types.resume";
 import { useAssistAi } from "@/hooks/useResumes";
+import { calculateJobMatch, extractTextFromResumeContent, JobMatchAnalysis } from "@/lib/skills-matcher";
+import { resumesApi, getErrorMessage } from "@/lib/api";
 
 interface Props {
   open: boolean;
@@ -19,107 +21,65 @@ interface Props {
 }
 
 export function JobTailorModal({ open, onOpenChange, content, targetRole, onApplyContent }: Props) {
+  const [jobInputMode, setJobInputMode] = useState<"text" | "url">("text");
   const [jobText, setJobText] = useState("");
+  const [jobUrl, setJobUrl] = useState("");
+  const [isFetchingUrl, setIsFetchingUrl] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [matchResult, setMatchResult] = useState<{
-    score: number;
-    foundKeywords: string[];
-    missingKeywords: string[];
-    suggestions: string[];
-  } | null>(null);
+  const [matchAnalysis, setMatchAnalysis] = useState<JobMatchAnalysis | null>(null);
 
   const assist = useAssistAi();
 
+  const handleFetchUrl = async () => {
+    if (!jobUrl.trim() || !/^https?:\/\//i.test(jobUrl.trim())) {
+      toast.error("Please enter a valid job posting URL (e.g., https://...)");
+      return;
+    }
+
+    setIsFetchingUrl(true);
+    try {
+      const res = await resumesApi.fetchUrl(jobUrl.trim());
+      if (!res.text || res.text.length < 40) {
+        toast.error("Could not extract enough text from this URL. Try pasting the job description directly.");
+        return;
+      }
+      setJobText(res.text);
+      setJobInputMode("text");
+      toast.success("Job description extracted from URL! Review or click Analyze below.");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setIsFetchingUrl(false);
+    }
+  };
+
   const handleAnalyze = () => {
     if (!jobText.trim() || jobText.trim().length < 30) {
-      toast.error("Please paste a meaningful job description (at least 30 characters).");
+      toast.error("Please provide a meaningful job description (at least 30 characters).");
       return;
     }
 
     setIsAnalyzing(true);
 
-    // Build plain text representation of the current resume
-    const resumeText = [
-      content.personal.fullName,
-      content.personal.title,
-      content.summary,
-      ...content.experience.map((e) => `${e.jobTitle} ${e.company} ${e.bullets.join(" ")}`),
-      ...content.skillGroups.map((g) => `${g.category}: ${g.skills.join(", ")}`),
-      ...content.projects.map((p) => `${p.name} ${p.description} ${p.technologies.join(" ")}`),
-    ].join(" ").toLowerCase();
-
-    // Extract keywords from the job description
-    const stopWords = new Set([
-      "about", "above", "after", "again", "against", "all", "and", "any", "are", "because",
-      "been", "before", "being", "below", "between", "both", "but", "by", "can", "cannot",
-      "could", "did", "does", "doing", "down", "during", "each", "few", "for", "from",
-      "further", "had", "has", "have", "having", "her", "here", "hers", "herself", "him",
-      "himself", "his", "how", "into", "its", "itself", "more", "most", "must", "nor",
-      "not", "off", "once", "only", "other", "ought", "our", "ours", "ourselves", "out",
-      "over", "own", "same", "she", "should", "some", "such", "than", "that", "the",
-      "their", "theirs", "them", "themselves", "then", "there", "these", "they", "this",
-      "those", "through", "too", "under", "until", "very", "was", "were", "what", "when",
-      "where", "which", "while", "who", "whom", "why", "with", "would", "you", "your",
-      "yours", "yourself", "yourselves", "will", "experience", "role", "years", "looking",
-      "requirements", "responsibilities", "skills", "team", "work", "candidate", "company"
-    ]);
-
-    const words = jobText
-      .toLowerCase()
-      .replace(/[^a-z0-9+#.\s]/g, " ")
-      .split(/\s+/)
-      .filter((w) => w.length > 2 && !stopWords.has(w));
-
-    // Frequency map
-    const freq: Record<string, number> = {};
-    words.forEach((w) => {
-      freq[w] = (freq[w] || 0) + 1;
-    });
-
-    // Top extracted keywords
-    const topKeywords = Object.entries(freq)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 18)
-      .map(([k]) => k);
-
-    const found: string[] = [];
-    const missing: string[] = [];
-
-    topKeywords.forEach((kw) => {
-      if (resumeText.includes(kw)) {
-        found.push(kw);
-      } else {
-        missing.push(kw);
-      }
-    });
-
-    const matchScore = Math.round((found.length / Math.max(1, topKeywords.length)) * 100);
+    const resumePlain = extractTextFromResumeContent(content);
+    const analysis = calculateJobMatch(resumePlain, jobText);
 
     setTimeout(() => {
-      setMatchResult({
-        score: matchScore,
-        foundKeywords: found,
-        missingKeywords: missing,
-        suggestions: [
-          `Your resume matches ${matchScore}% of the core keywords in this job description.`,
-          missing.length > 0
-            ? `Consider adding key missing terms like "${missing.slice(0, 4).join('", "')}" into your Skills or Experience sections.`
-            : "Great keyword coverage! Align your achievement bullets with the primary responsibilities listed.",
-        ],
-      });
+      setMatchAnalysis(analysis);
       setIsAnalyzing(false);
-    }, 400);
+      toast.success(`Analysis ready: ${analysis.matchPercentage}% technical match found!`);
+    }, 300);
   };
 
-  const addMissingToSkills = (keywordsToAdd: string[]) => {
-    if (!keywordsToAdd.length) return;
+  const addMissingToSkills = (skillsToAdd: string[]) => {
+    if (!skillsToAdd.length) return;
     const next = { ...content };
     const groups = [...(next.skillGroups || [])];
 
     if (!groups.length) {
       groups.push({
         id: Math.random().toString(36).slice(2, 9),
-        category: "Required Job Skills",
+        category: "Required Job Technologies",
         skills: [],
       });
     }
@@ -128,11 +88,10 @@ export function JobTailorModal({ open, onOpenChange, content, targetRole, onAppl
     const existing = new Set(firstGroup.skills.map((s) => s.toLowerCase()));
 
     const newlyAdded: string[] = [];
-    keywordsToAdd.forEach((kw) => {
-      if (!existing.has(kw.toLowerCase())) {
-        const capitalized = kw.charAt(0).toUpperCase() + kw.slice(1);
-        firstGroup.skills.push(capitalized);
-        newlyAdded.push(capitalized);
+    skillsToAdd.forEach((sk) => {
+      if (!existing.has(sk.toLowerCase())) {
+        firstGroup.skills.push(sk);
+        newlyAdded.push(sk);
       }
     });
 
@@ -142,12 +101,19 @@ export function JobTailorModal({ open, onOpenChange, content, targetRole, onAppl
 
     toast.success(`Added ${newlyAdded.length} missing skill(s) to "${firstGroup.category}"!`);
 
-    // Update local missing list
-    if (matchResult) {
-      setMatchResult({
-        ...matchResult,
-        missingKeywords: matchResult.missingKeywords.filter((k) => !keywordsToAdd.includes(k)),
-        foundKeywords: [...matchResult.foundKeywords, ...keywordsToAdd],
+    // Update local analysis view
+    if (matchAnalysis) {
+      const updatedMissing = matchAnalysis.missingSkills.filter((s) => !skillsToAdd.includes(s));
+      const updatedMatched = [...matchAnalysis.matchedSkills, ...newlyAdded];
+      const newPct = matchAnalysis.requiredSkills.length > 0
+        ? Math.round((updatedMatched.length / matchAnalysis.requiredSkills.length) * 100)
+        : matchAnalysis.matchPercentage;
+
+      setMatchAnalysis({
+        ...matchAnalysis,
+        matchPercentage: Math.min(100, newPct),
+        missingSkills: updatedMissing,
+        matchedSkills: updatedMatched,
       });
     }
   };
@@ -182,24 +148,84 @@ export function JobTailorModal({ open, onOpenChange, content, targetRole, onAppl
       <ModalContent size="xl">
         <ModalHeader>
           <span className="flex items-center gap-2 text-lg font-bold">
-            <Target className="size-5 text-primary-600" /> AI Job Description Tailoring & Matcher
+            <Target className="size-5 text-primary-600" /> Tailor Resume to Job Description
           </span>
           <span className="text-sm text-muted-foreground">
-            Paste any job posting to analyze keyword match %, extract gaps, and automatically tailor your resume.
+            Accurately detect required technologies, compare skills vs. your resume, and align keywords for applicant tracking systems.
           </span>
         </ModalHeader>
 
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           {/* Left column: Input */}
           <div className="space-y-3">
-            <TextareaField
-              label="Job Description / Requirements"
-              placeholder="Paste job posting text here (responsibilities, required qualifications, tech stack)..."
-              value={jobText}
-              onChange={(e) => setJobText(e.target.value)}
-              rows={10}
-              className="text-xs font-mono"
-            />
+            {/* Input tabs */}
+            <div className="flex rounded-lg border border-border bg-muted/40 p-1">
+              <button
+                type="button"
+                onClick={() => setJobInputMode("text")}
+                className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center justify-center gap-1.5 ${
+                  jobInputMode === "text"
+                    ? "bg-background text-foreground shadow-xs"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <FileText className="size-3.5" /> Paste Description
+              </button>
+              <button
+                type="button"
+                onClick={() => setJobInputMode("url")}
+                className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center justify-center gap-1.5 ${
+                  jobInputMode === "url"
+                    ? "bg-background text-foreground shadow-xs"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Link2 className="size-3.5" /> Job Posting URL
+              </button>
+            </div>
+
+            {jobInputMode === "url" ? (
+              <div className="space-y-2 rounded-lg border border-border p-3 bg-card">
+                <label className="field-label">Target Job URL (LinkedIn, Indeed, Greenhouse, etc.)</label>
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    placeholder="https://company.com/jobs/senior-engineer"
+                    value={jobUrl}
+                    onChange={(e) => setJobUrl(e.target.value)}
+                    className="h-9 flex-1 rounded-md border border-input bg-background px-3 text-xs shadow-xs focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={handleFetchUrl}
+                    disabled={isFetchingUrl || !jobUrl.trim()}
+                  >
+                    {isFetchingUrl ? <Loader2 className="size-3.5 animate-spin" /> : "Fetch"}
+                  </Button>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Our crawler extracts the clean text directly from the public posting URL.
+                </p>
+              </div>
+            ) : null}
+
+            <div>
+              <TextareaField
+                label="Job Description Text"
+                placeholder="Paste the full job requirements, responsibilities, and technical stack here..."
+                value={jobText}
+                onChange={(e) => setJobText(e.target.value)}
+                rows={9}
+                className="text-xs font-mono"
+              />
+              <div className="flex justify-between items-center text-[11px] text-muted-foreground mt-1">
+                <span>{jobText.length} characters</span>
+                {jobText.length > 50 && (
+                  <span className="text-emerald-600 font-medium">Ready for skill extraction</span>
+                )}
+              </div>
+            </div>
+
             <Button
               className="w-full"
               onClick={handleAnalyze}
@@ -207,84 +233,120 @@ export function JobTailorModal({ open, onOpenChange, content, targetRole, onAppl
             >
               {isAnalyzing ? (
                 <>
-                  <Loader2 className="mr-2 size-4 animate-spin" /> Analyzing Keyword Overlap...
+                  <Loader2 className="mr-2 size-4 animate-spin" /> Extracting Technologies &amp; Skills...
                 </>
               ) : (
                 <>
-                  <Sparkles className="mr-2 size-4" /> Calculate Job Match & Keyword Gaps
+                  <Sparkles className="mr-2 size-4" /> Calculate Technical Match &amp; Gaps
                 </>
               )}
             </Button>
           </div>
 
           {/* Right column: Match Analysis Results */}
-          <div className="space-y-4 rounded-xl border border-border bg-muted/30 p-4">
-            {matchResult ? (
+          <div className="space-y-4 rounded-xl border border-border bg-muted/20 p-4">
+            {matchAnalysis ? (
               <>
+                {/* Score Header */}
                 <div className="flex items-center justify-between border-b border-border pb-3">
                   <div>
-                    <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">ATS Job Match</p>
-                    <p className="text-2xl font-black text-foreground">{matchResult.score}%</p>
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Technical Stack Match</p>
+                    <div className="flex items-baseline gap-2 mt-0.5">
+                      <span className="text-2xl font-black text-foreground">{matchAnalysis.matchPercentage}%</span>
+                      <span className="text-xs text-muted-foreground">({matchAnalysis.matchedSkills.length} of {matchAnalysis.requiredSkills.length} skills)</span>
+                    </div>
                   </div>
-                  <Badge tone={matchResult.score >= 70 ? "green" : matchResult.score >= 50 ? "amber" : "red"} size="md">
-                    {matchResult.score >= 75 ? "Strong Fit" : matchResult.score >= 50 ? "Moderate Match" : "Low Alignment"}
+                  <Badge
+                    tone={
+                      matchAnalysis.matchPercentage >= 75
+                        ? "green"
+                        : matchAnalysis.matchPercentage >= 50
+                        ? "blue"
+                        : "amber"
+                    }
+                    size="md"
+                  >
+                    {matchAnalysis.rating}
                   </Badge>
                 </div>
 
-                {/* Missing Keywords */}
+                {/* Missing Technologies (Required by Job, missing from Resume) */}
                 <div>
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-semibold text-rose-600 dark:text-rose-400">
-                      Missing Keywords ({matchResult.missingKeywords.length})
+                  <div className="flex items-center justify-between mb-1.5">
+                    <p className="text-xs font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1">
+                      <AlertCircle className="size-3.5" /> Missing Required Skills ({matchAnalysis.missingSkills.length})
                     </p>
-                    {matchResult.missingKeywords.length > 0 && (
+                    {matchAnalysis.missingSkills.length > 0 && (
                       <button
                         type="button"
-                        onClick={() => addMissingToSkills(matchResult.missingKeywords)}
-                        className="text-xs font-medium text-primary-600 hover:underline"
+                        onClick={() => addMissingToSkills(matchAnalysis.missingSkills)}
+                        className="text-xs font-semibold text-primary-600 hover:underline"
                       >
-                        + Add all to skills
+                        + Add all to resume
                       </button>
                     )}
                   </div>
-                  <div className="mt-1.5 flex flex-wrap gap-1.5 max-h-24 overflow-y-auto thin-scrollbar">
-                    {matchResult.missingKeywords.length === 0 ? (
-                      <p className="text-xs text-muted-foreground">None! All top keywords are present in your resume.</p>
+
+                  <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto thin-scrollbar">
+                    {matchAnalysis.missingSkills.length === 0 ? (
+                      <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium py-1">
+                        <CheckCircle2 className="size-4" /> Exceptional! All required technologies are covered in your resume.
+                      </div>
                     ) : (
-                      matchResult.missingKeywords.map((kw) => (
+                      matchAnalysis.missingSkills.map((sk) => (
                         <button
-                          key={kw}
+                          key={sk}
                           type="button"
-                          onClick={() => addMissingToSkills([kw])}
-                          className="group inline-flex items-center gap-1 rounded-md border border-rose-200 bg-rose-50 px-2 py-0.5 text-xs text-rose-700 hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300"
+                          onClick={() => addMissingToSkills([sk])}
+                          className="group inline-flex items-center gap-1 rounded-md border border-rose-200 bg-rose-50 px-2 py-0.5 text-xs font-medium text-rose-700 hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300 transition-colors"
+                          title="Click to add this skill to your resume"
                         >
-                          {kw} <Plus className="size-3 opacity-60 group-hover:opacity-100" />
+                          {sk} <Plus className="size-3 opacity-60 group-hover:opacity-100" />
                         </button>
                       ))
                     )}
                   </div>
                 </div>
 
-                {/* Matching Keywords */}
+                {/* Matched Technologies */}
                 <div>
-                  <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                    Matching Keywords in Resume ({matchResult.foundKeywords.length})
+                  <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mb-1.5 flex items-center gap-1">
+                    <Check className="size-3.5" /> Matched Technologies ({matchAnalysis.matchedSkills.length})
                   </p>
-                  <div className="mt-1.5 flex flex-wrap gap-1.5 max-h-20 overflow-y-auto thin-scrollbar">
-                    {matchResult.foundKeywords.map((kw) => (
-                      <span
-                        key={kw}
-                        className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300"
-                      >
-                        <Check className="size-3" /> {kw}
-                      </span>
-                    ))}
+                  <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto thin-scrollbar">
+                    {matchAnalysis.matchedSkills.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">None detected yet.</p>
+                    ) : (
+                      matchAnalysis.matchedSkills.map((sk) => (
+                        <span
+                          key={sk}
+                          className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300"
+                        >
+                          <Check className="size-3" /> {sk}
+                        </span>
+                      ))
+                    )}
                   </div>
                 </div>
 
-                {/* Quick 1-Click Tailor Actions */}
+                {/* Recommendations */}
+                {matchAnalysis.recommendations.length > 0 && (
+                  <div className="rounded-lg bg-card border border-border p-2.5 text-xs space-y-1">
+                    <p className="font-semibold text-foreground">Recommendations:</p>
+                    <ul className="space-y-1 text-muted-foreground">
+                      {matchAnalysis.recommendations.slice(0, 2).map((rec, ri) => (
+                        <li key={ri} className="flex gap-1.5">
+                          <span className="text-primary-600 font-bold">•</span>
+                          <span>{rec}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* 1-Click Tailor Actions */}
                 <div className="pt-2 border-t border-border space-y-2">
-                  <p className="text-xs font-semibold text-foreground">1-Click AI Tailoring Actions</p>
+                  <p className="text-xs font-semibold text-foreground">AI Automation</p>
                   <Button
                     size="sm"
                     variant="outline"
@@ -300,9 +362,9 @@ export function JobTailorModal({ open, onOpenChange, content, targetRole, onAppl
             ) : (
               <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
                 <Target className="size-10 text-muted-foreground/40 mb-2" />
-                <p className="text-sm font-medium text-foreground">No Job Description Analyzed Yet</p>
+                <p className="text-sm font-semibold text-foreground">No Job Description Analyzed Yet</p>
                 <p className="text-xs mt-1 max-w-xs">
-                  Paste the job posting requirements on the left and click "Calculate Job Match" to see your keyword overlap and missing terms.
+                  Paste the job posting requirements or enter a URL on the left, then click Calculate to see your exact skill match and gaps.
                 </p>
               </div>
             )}

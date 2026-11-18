@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { useResumes, useAnalyses } from "@/hooks/useResumes";
 import { useCurrentUser } from "@/store/auth";
+import { ResumeJobTailorHero } from "@/components/resume/ResumeJobTailorHero";
 
 const FEATURES = [
   { icon: FileText, title: "Guided builder", text: "Personal info, experience, education, skills, projects and more with autosave." },
@@ -80,6 +81,9 @@ export default function ResumeBuilderHome() {
           <Button asChild size="lg" variant="outline"><Link href="/resume-analyzer">Analyze resume</Link></Button>
         </div>
       </div>
+
+      {/* -------- Main Feature: Tailor to Job -------- */}
+      <ResumeJobTailorHero />
 
       {/* -------- individual tools -------- */}
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

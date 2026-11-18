@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import type { ResumeContent } from "@/lib/types.resume";
+import type { ResumeContent, ResumeCustomization } from "@/lib/types.resume";
 import { Textarea, TextField, TextareaField } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import {
@@ -20,9 +20,12 @@ import {
   GripVertical,
   ExternalLink,
   Github,
+  Upload,
+  Image as ImageIcon,
 } from "lucide-react";
 import { ACTION_VERBS_BY_CATEGORY } from "@/lib/resume-presets";
 import { searchSkills } from "@/lib/skills-database";
+import { normalizeImageUrl, normalizeLinkUrl } from "@/lib/url-utils";
 import { toast } from "sonner";
 
 export const uid = () => Math.random().toString(36).slice(2, 9);
@@ -32,20 +35,176 @@ export interface SectionProps {
   onChange: (next: ResumeContent) => void;
   onAssist: (action: string, text: string, apply: (suggestion: string) => void) => void;
   targetRole?: string;
+  customization?: ResumeCustomization;
+  onCustomizationChange?: (next: ResumeCustomization) => void;
 }
 
 /* ------------------------------------------------------------- Personal */
 
-export function PersonalSection({ content, onChange }: SectionProps) {
+export function PersonalSection({ content, onChange, customization, onCustomizationChange }: SectionProps) {
   const p = content.personal;
   const set = (k: keyof typeof p, v: string) =>
     onChange({ ...content, personal: { ...p, [k]: v } });
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const photoUrl = customization?.photoUrl || "";
+  const photoShape = customization?.photoShape || "circle";
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file (PNG, JPG, WebP).");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image file is too large (max 5MB).");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result || "");
+      if (onCustomizationChange) {
+        onCustomizationChange({
+          ...(customization || {}),
+          photoUrl: result,
+        });
+        toast.success("Profile photo uploaded!");
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleUrlChange = (val: string) => {
+    if (!onCustomizationChange) return;
+    const normalized = normalizeImageUrl(val);
+    onCustomizationChange({
+      ...(customization || {}),
+      photoUrl: normalized || undefined,
+    });
+  };
+
+  const handleShapeChange = (shape: "circle" | "rounded" | "square") => {
+    if (!onCustomizationChange) return;
+    onCustomizationChange({
+      ...(customization || {}),
+      photoShape: shape,
+    });
+  };
+
+  const handleRemovePhoto = () => {
+    if (!onCustomizationChange) return;
+    onCustomizationChange({
+      ...(customization || {}),
+      photoUrl: undefined,
+    });
+    toast.success("Profile photo removed.");
+  };
+
   return (
     <div className="space-y-4">
+      {/* Profile Photo / Headshot Manager */}
+      <div className="rounded-lg border border-border/80 bg-card p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <ImageIcon className="size-4 text-primary-600" /> Profile Photo (Optional)
+          </p>
+          {photoUrl && (
+            <button
+              type="button"
+              onClick={handleRemovePhoto}
+              className="text-xs text-rose-600 hover:underline inline-flex items-center gap-1"
+            >
+              <Trash2 className="size-3" /> Remove Photo
+            </button>
+          )}
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          {/* Avatar Preview */}
+          <div className="relative shrink-0">
+            {photoUrl ? (
+              <img
+                src={photoUrl}
+                alt="Profile Preview"
+                className={`size-16 object-cover border-2 shadow-xs ${
+                  photoShape === "circle" ? "rounded-full" : photoShape === "square" ? "rounded-none" : "rounded-xl"
+                }`}
+                style={{ borderColor: customization?.accentColor || "#1e3a5f" }}
+                onError={(e) => {
+                  (e.target as HTMLElement).style.opacity = "0.5";
+                }}
+              />
+            ) : (
+              <div
+                className={`size-16 bg-muted/60 border-2 border-dashed flex items-center justify-center text-xs text-muted-foreground ${
+                  photoShape === "circle" ? "rounded-full" : photoShape === "square" ? "rounded-none" : "rounded-xl"
+                }`}
+              >
+                No Photo
+              </div>
+            )}
+          </div>
+
+          <div className="flex-1 space-y-2 w-full">
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                className="hidden"
+              />
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="size-3.5 mr-1.5" /> Upload Photo File
+              </Button>
+
+              <div className="inline-flex rounded-md border border-border p-0.5 bg-muted/30">
+                {(["circle", "rounded", "square"] as const).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => handleShapeChange(s)}
+                    className={`px-2 py-1 text-xs capitalize rounded transition-colors ${
+                      photoShape === s
+                        ? "bg-background text-foreground font-semibold shadow-xs"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <input
+                type="text"
+                placeholder="Or paste any Image URL (Google Drive, Dropbox, Imgur, GitHub, Unsplash)..."
+                value={customization?.photoUrl || ""}
+                onChange={(e) => handleUrlChange(e.target.value)}
+                className="h-8 w-full rounded-md border border-input bg-card px-2.5 text-xs shadow-xs focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              />
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Google Drive share links, Dropbox URLs, and GitHub avatars are automatically detected and converted.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Contact & Identification */}
       <div className="rounded-lg border border-border/80 bg-card p-4 space-y-3">
         <p className="text-sm font-semibold text-foreground flex items-center gap-2">
-          Contact & Identification
+          Contact &amp; Identification
         </p>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <TextField
@@ -823,27 +982,63 @@ export function ProjectsSection({ content, onChange, onAssist }: SectionProps) {
               </div>
             </div>
             <div className="space-y-1">
-              <label className="field-label">Live URL</label>
+              <div className="flex items-center justify-between">
+                <label className="field-label">Live URL</label>
+                {pr.url && (
+                  <a
+                    href={normalizeLinkUrl(pr.url)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[11px] text-primary-600 hover:underline flex items-center gap-0.5"
+                    title="Test project link in new tab"
+                  >
+                    Test link ↗
+                  </a>
+                )}
+              </div>
               <div className="relative">
                 <ExternalLink className="absolute left-2.5 top-2.5 size-3.5 text-muted-foreground" />
                 <input
-                  type="url"
+                  type="text"
                   value={pr.url}
                   onChange={(ev) => setItem(i, { url: ev.target.value })}
-                  placeholder="https://myproject.com"
+                  onBlur={() => {
+                    if (pr.url && !pr.url.startsWith("http") && !pr.url.startsWith("//")) {
+                      setItem(i, { url: normalizeLinkUrl(pr.url) });
+                    }
+                  }}
+                  placeholder="https://myproject.com or myproject.com"
                   className="h-9 w-full rounded-lg border border-input bg-card pl-7 pr-3 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25"
                 />
               </div>
             </div>
             <div className="space-y-1">
-              <label className="field-label">GitHub Repository</label>
+              <div className="flex items-center justify-between">
+                <label className="field-label">GitHub Repository</label>
+                {pr.githubUrl && (
+                  <a
+                    href={normalizeLinkUrl(pr.githubUrl)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[11px] text-primary-600 hover:underline flex items-center gap-0.5"
+                    title="Test repository link in new tab"
+                  >
+                    Test repo ↗
+                  </a>
+                )}
+              </div>
               <div className="relative">
                 <Github className="absolute left-2.5 top-2.5 size-3.5 text-muted-foreground" />
                 <input
-                  type="url"
+                  type="text"
                   value={pr.githubUrl}
                   onChange={(ev) => setItem(i, { githubUrl: ev.target.value })}
-                  placeholder="https://github.com/user/project"
+                  onBlur={() => {
+                    if (pr.githubUrl && !pr.githubUrl.startsWith("http") && !pr.githubUrl.startsWith("//")) {
+                      setItem(i, { githubUrl: normalizeLinkUrl(pr.githubUrl) });
+                    }
+                  }}
+                  placeholder="https://github.com/user/project or github.com/user/project"
                   className="h-9 w-full rounded-lg border border-input bg-card pl-7 pr-3 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25"
                 />
               </div>

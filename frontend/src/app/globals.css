@@ -371,7 +371,22 @@
   .resume-doc {
     box-shadow: none !important;
     margin: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
+  .resume-doc a {
+    color: var(--accent, #1e3a5f) !important;
+    text-decoration: underline !important;
+    pointer-events: auto !important;
+  }
+}
+
+.resume-doc a {
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+.resume-doc a:hover {
+  opacity: 0.85;
 }
 
 /* ------------------------------------------------------- layout variants */

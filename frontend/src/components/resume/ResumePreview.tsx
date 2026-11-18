@@ -2,7 +2,9 @@
 
 import type { ResumeContent, ResumeCustomization } from "@/lib/types.resume";
 import { getTemplate, templateStyle, DEFAULT_SECTION_ORDER } from "@/lib/resume-templates";
-import { ExternalLink, Github, Globe, Mail, MapPin, Phone, Linkedin } from "lucide-react";
+import { normalizeImageUrl, normalizeLinkUrl, formatDisplayUrl } from "@/lib/url-utils";
+import { ExternalLink, Github, Globe, Mail, MapPin, Phone, Linkedin, Award, Briefcase, GraduationCap, Code } from "lucide-react";
+import { useState } from "react";
 
 interface Props {
   content: ResumeContent;
@@ -64,12 +66,13 @@ function SectionTitle({
           style={{
             background: "var(--accent)",
             color: "#ffffff",
-            padding: "2px 8px",
+            padding: "3px 10px",
             borderRadius: "4px",
             fontSize: "11px",
             fontWeight: 700,
             textTransform: "uppercase",
-            letterSpacing: "0.05em",
+            letterSpacing: "0.06em",
+            display: "inline-block",
           }}
         >
           {children}
@@ -143,8 +146,8 @@ function ContactLine({ content }: { content: ResumeContent }) {
     items.push(
       <span key="email" className="inline-flex items-center gap-1">
         <Mail className="size-3 shrink-0 opacity-70" />
-        <a href={`mailto:${pp.email}`} className="hover:underline">
-          {pp.email}
+        <a href={`mailto:${pp.email.trim()}`} className="hover:underline">
+          {pp.email.trim()}
         </a>
       </span>
     );
@@ -153,7 +156,9 @@ function ContactLine({ content }: { content: ResumeContent }) {
     items.push(
       <span key="phone" className="inline-flex items-center gap-1">
         <Phone className="size-3 shrink-0 opacity-70" />
-        <span>{pp.phone}</span>
+        <a href={`tel:${pp.phone.replace(/[^0-9+]/g, "")}`} className="hover:underline">
+          {pp.phone.trim()}
+        </a>
       </span>
     );
   }
@@ -161,20 +166,21 @@ function ContactLine({ content }: { content: ResumeContent }) {
     items.push(
       <span key="loc" className="inline-flex items-center gap-1">
         <MapPin className="size-3 shrink-0 opacity-70" />
-        <span>{pp.location}</span>
+        <span>{pp.location.trim()}</span>
       </span>
     );
   }
   if (pp.linkedin) {
-    const clean = pp.linkedin.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//i, "");
+    const clean = formatDisplayUrl(pp.linkedin).replace(/^linkedin\.com\/in\//i, "");
     items.push(
       <span key="linkedin" className="inline-flex items-center gap-1">
         <Linkedin className="size-3 shrink-0 opacity-70" />
         <a
-          href={pp.linkedin.startsWith("http") ? pp.linkedin : `https://${pp.linkedin}`}
+          href={normalizeLinkUrl(pp.linkedin)}
           target="_blank"
           rel="noreferrer"
-          className="hover:underline"
+          className="hover:underline font-medium"
+          title={normalizeLinkUrl(pp.linkedin)}
         >
           {clean || "LinkedIn"}
         </a>
@@ -182,15 +188,16 @@ function ContactLine({ content }: { content: ResumeContent }) {
     );
   }
   if (pp.github) {
-    const clean = pp.github.replace(/^https?:\/\/(www\.)?github\.com\//i, "");
+    const clean = formatDisplayUrl(pp.github).replace(/^github\.com\//i, "");
     items.push(
       <span key="github" className="inline-flex items-center gap-1">
         <Github className="size-3 shrink-0 opacity-70" />
         <a
-          href={pp.github.startsWith("http") ? pp.github : `https://${pp.github}`}
+          href={normalizeLinkUrl(pp.github)}
           target="_blank"
           rel="noreferrer"
-          className="hover:underline"
+          className="hover:underline font-medium"
+          title={normalizeLinkUrl(pp.github)}
         >
           {clean || "GitHub"}
         </a>
@@ -198,15 +205,16 @@ function ContactLine({ content }: { content: ResumeContent }) {
     );
   }
   if (pp.portfolio) {
-    const clean = pp.portfolio.replace(/^https?:\/\/(www\.)?/i, "");
+    const clean = formatDisplayUrl(pp.portfolio);
     items.push(
       <span key="portfolio" className="inline-flex items-center gap-1">
         <Globe className="size-3 shrink-0 opacity-70" />
         <a
-          href={pp.portfolio.startsWith("http") ? pp.portfolio : `https://${pp.portfolio}`}
+          href={normalizeLinkUrl(pp.portfolio)}
           target="_blank"
           rel="noreferrer"
-          className="hover:underline"
+          className="hover:underline font-medium"
+          title={normalizeLinkUrl(pp.portfolio)}
         >
           {clean || "Portfolio"}
         </a>
@@ -235,8 +243,10 @@ export function ResumePreview({ content, templateId, customization, forPrint }: 
   const p = content.personal;
   const titles = customization?.sectionTitles ?? {};
   const isCards = t.layout === "cards" || customization?.showBorders;
-  const photoUrl = customization?.photoUrl;
+  const rawPhoto = customization?.photoUrl;
+  const photoUrl = normalizeImageUrl(rawPhoto);
   const photoShape = customization?.photoShape ?? "circle";
+  const [imageError, setImageError] = useState(false);
 
   const getTitle = (key: string) => titles[key] || DEFAULT_SECTION_TITLES[key] || key;
 
@@ -249,7 +259,7 @@ export function ResumePreview({ content, templateId, customization, forPrint }: 
             <SectionTitle layout={t.layout} customization={customization}>
               {getTitle(key)}
             </SectionTitle>
-            <p className="resume-p">{summary}</p>
+            <p className="resume-p leading-relaxed">{summary}</p>
           </section>
         );
 
@@ -263,25 +273,29 @@ export function ResumePreview({ content, templateId, customization, forPrint }: 
             {content.experience.map((e, i) => (
               <div
                 key={e.id ?? i}
-                className={`resume-item ${isCards ? "rounded-lg border border-border/80 bg-background/50 p-3 shadow-xs mb-3" : ""}`}
+                className={`resume-item ${
+                  isCards ? "rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 p-3 shadow-xs mb-3" : "mb-3"
+                }`}
               >
-                <div className="resume-row">
-                  <strong>{e.jobTitle}</strong>
-                  <span>
+                <div className="resume-row flex items-baseline justify-between gap-2">
+                  <strong className="text-foreground text-[13px]">{e.jobTitle}</strong>
+                  <span className="text-xs text-muted-foreground font-medium shrink-0">
                     {e.startDate}
                     {e.startDate || e.endDate ? " – " : ""}
                     {e.current ? "Present" : e.endDate}
                   </span>
                 </div>
-                <div className="resume-row resume-sub">
-                  <span>
+                <div className="resume-row resume-sub text-xs text-muted-foreground mt-0.5">
+                  <span className="font-semibold text-foreground/80">
                     {e.company}
                     {e.location ? ` • ${e.location}` : ""}
                   </span>
                 </div>
-                <ul className="resume-list">
+                <ul className="resume-list mt-1.5 space-y-1">
                   {e.bullets.filter(Boolean).map((b, j) => (
-                    <li key={j}>{b}</li>
+                    <li key={j} className="text-xs text-foreground/90 leading-relaxed">
+                      {b}
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -296,12 +310,23 @@ export function ResumePreview({ content, templateId, customization, forPrint }: 
             <SectionTitle layout={t.layout} customization={customization}>
               {getTitle(key)}
             </SectionTitle>
-            {content.skillGroups.map((g, i) => (
-              <p key={g.id ?? i} className="resume-p">
-                <strong>{g.category}: </strong>
-                {g.skills.join(", ")}
-              </p>
-            ))}
+            <div className="space-y-2">
+              {content.skillGroups.map((g, i) => (
+                <div key={g.id ?? i} className="resume-p text-xs leading-relaxed">
+                  <strong className="text-foreground mr-1.5">{g.category}:</strong>
+                  <div className="inline-flex flex-wrap gap-1 align-baseline">
+                    {g.skills.map((s, si) => (
+                      <span
+                        key={si}
+                        className="inline-block rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[11px] font-medium text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700/80"
+                      >
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           </section>
         );
 
@@ -314,35 +339,42 @@ export function ResumePreview({ content, templateId, customization, forPrint }: 
             </SectionTitle>
             {content.projects.map((pr, i) => {
               const techPos = pr.techPosition ?? "inline";
+              const liveUrl = normalizeLinkUrl(pr.url);
+              const gitUrl = normalizeLinkUrl(pr.githubUrl);
+
               return (
                 <div
                   key={pr.id ?? i}
-                  className={`resume-item ${isCards ? "rounded-lg border border-border/80 bg-background/50 p-3 shadow-xs mb-3" : ""}`}
+                  className={`resume-item ${
+                    isCards ? "rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 p-3 shadow-xs mb-3" : "mb-3"
+                  }`}
                 >
-                  <div className="resume-row flex items-baseline justify-between gap-2">
-                    <div className="flex flex-wrap items-center gap-1.5">
+                  <div className="resume-row flex flex-wrap items-baseline justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       {pr.icon && <span className="text-sm shrink-0">{pr.icon}</span>}
-                      <strong>{pr.name}</strong>
-                      {pr.url && (
+                      <strong className="text-foreground text-[13px]">{pr.name}</strong>
+
+                      {/* Working, Clickable Links with high visibility for PDF & Print */}
+                      {liveUrl && (
                         <a
-                          href={pr.url}
+                          href={liveUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-0.5 text-xs text-primary-600 hover:underline font-medium"
-                          title="Live Project URL"
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary-600 hover:text-primary-700 hover:underline bg-primary-50 dark:bg-primary-950/60 px-2 py-0.5 rounded border border-primary-200 dark:border-primary-800"
+                          title={`Live Link: ${liveUrl}`}
                         >
-                          <ExternalLink className="size-2.5" /> Live
+                          <ExternalLink className="size-2.5 shrink-0" /> Live Demo ↗
                         </a>
                       )}
-                      {pr.githubUrl && (
+                      {gitUrl && (
                         <a
-                          href={pr.githubUrl}
+                          href={gitUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground hover:underline"
-                          title="Source Code"
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:text-foreground hover:underline bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700"
+                          title={`Repository: ${gitUrl}`}
                         >
-                          <Github className="size-2.5" /> Code
+                          <Github className="size-2.5 shrink-0" /> GitHub ↗
                         </a>
                       )}
                     </div>
@@ -355,36 +387,55 @@ export function ResumePreview({ content, templateId, customization, forPrint }: 
                   </div>
 
                   {techPos === "inline" && pr.technologies.length > 0 && (
-                    <p className="resume-sub text-xs text-muted-foreground" style={{ marginTop: "1px" }}>
-                      {pr.technologies.join(" • ")}
-                    </p>
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {pr.technologies.map((tech, ti) => (
+                        <span
+                          key={ti}
+                          className="inline-block rounded bg-muted/60 px-1.5 py-0.2 text-[10px] font-medium text-muted-foreground border border-border/50"
+                        >
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
                   )}
 
                   {pr.description ? (
                     pr.descriptionType === "bullets" ? (
-                      <ul className="resume-list">
+                      <ul className="resume-list mt-1.5 space-y-0.5">
                         {pr.description
                           .split("\n")
                           .map((l) => l.trim())
                           .filter(Boolean)
                           .map((line, li) => (
-                            <li key={li}>{line.replace(/^[•\-\*]\s*/, "")}</li>
+                            <li key={li} className="text-xs text-foreground/90 leading-relaxed">
+                              {line.replace(/^[•\-\*]\s*/, "")}
+                            </li>
                           ))}
                       </ul>
                     ) : (
-                      <p className="resume-p">{pr.description}</p>
+                      <p className="resume-p text-xs text-foreground/90 mt-1 leading-relaxed">{pr.description}</p>
                     )
                   ) : null}
 
                   {techPos === "bottom" && pr.technologies.length > 0 && (
-                    <p className="resume-p resume-sub text-xs" style={{ marginTop: "2px" }}>
-                      <strong>Technologies: </strong>
-                      {pr.technologies.join(", ")}
-                    </p>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                      <span className="text-[11px] font-bold text-foreground">Tech:</span>
+                      {pr.technologies.map((tech, ti) => (
+                        <span
+                          key={ti}
+                          className="inline-block rounded bg-muted/60 px-1.5 py-0.2 text-[10px] font-medium text-muted-foreground border border-border/50"
+                        >
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
                   )}
 
                   {pr.outcomes ? (
-                    <p className="resume-p text-xs italic opacity-90 mt-0.5">{pr.outcomes}</p>
+                    <div className="mt-1.5 flex items-center gap-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200/60 dark:border-emerald-800/60">
+                      <span>⚡ Impact:</span>
+                      <span>{pr.outcomes}</span>
+                    </div>
                   ) : null}
                 </div>
               );
@@ -402,16 +453,20 @@ export function ResumePreview({ content, templateId, customization, forPrint }: 
             {content.education.map((ed, i) => (
               <div
                 key={ed.id ?? i}
-                className={`resume-item ${isCards ? "rounded-lg border border-border/80 bg-background/50 p-3 shadow-xs mb-3" : ""}`}
+                className={`resume-item ${
+                  isCards ? "rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 p-3 shadow-xs mb-3" : "mb-2"
+                }`}
               >
-                <div className="resume-row">
-                  <strong>{ed.institution}</strong>
-                  <span>
+                <div className="resume-row flex items-baseline justify-between gap-2">
+                  <strong className="text-foreground text-[13px]">{ed.institution}</strong>
+                  <span className="text-xs text-muted-foreground font-medium shrink-0">
                     {ed.graduationDate}
                     {ed.gpa ? ` • GPA ${ed.gpa}` : ""}
                   </span>
                 </div>
-                <p className="resume-p">{[ed.degree, ed.field].filter(Boolean).join(" in ")}</p>
+                <p className="resume-p text-xs text-foreground/80 mt-0.5">
+                  {[ed.degree, ed.field].filter(Boolean).join(" in ")}
+                </p>
               </div>
             ))}
           </section>
@@ -437,11 +492,17 @@ export function ResumePreview({ content, templateId, customization, forPrint }: 
             <SectionTitle layout={t.layout} customization={customization}>
               {getTitle(key)}
             </SectionTitle>
-            <p className="resume-p">
-              {content.languages
-                .map((l) => `${l.language}${l.proficiency ? ` (${l.proficiency})` : ""}`)
-                .join("  •  ")}
-            </p>
+            <div className="flex flex-wrap gap-2 text-xs">
+              {content.languages.map((l, li) => (
+                <span
+                  key={li}
+                  className="inline-flex items-center gap-1 rounded bg-muted/60 px-2 py-0.5 border border-border/60"
+                >
+                  <strong className="text-foreground">{l.language}</strong>
+                  {l.proficiency && <span className="text-muted-foreground">({l.proficiency})</span>}
+                </span>
+              ))}
+            </div>
           </section>
         );
 
@@ -450,18 +511,22 @@ export function ResumePreview({ content, templateId, customization, forPrint }: 
     }
   };
 
+  const isPhotoLayout = Boolean(photoUrl || t.layout === "photo");
+
   return (
     <div
       className={`resume-doc layout-${t.layout}${forPrint ? " for-print" : ""}`}
       style={templateStyle(t, customization)}
     >
-      <header className={`resume-header ${photoUrl || t.layout === "photo" ? "flex items-center gap-4" : ""}`}>
-        {(photoUrl || t.layout === "photo") && (
+      <header className={`resume-header ${isPhotoLayout ? "flex items-center gap-4" : ""}`}>
+        {isPhotoLayout && (
           <div className="shrink-0">
-            {photoUrl ? (
+            {photoUrl && !imageError ? (
               <img
                 src={photoUrl}
                 alt={p.fullName || "Profile"}
+                crossOrigin="anonymous"
+                onError={() => setImageError(true)}
                 className={`size-20 object-cover border-2 shadow-sm ${
                   photoShape === "circle"
                     ? "rounded-full"
@@ -473,25 +538,28 @@ export function ResumePreview({ content, templateId, customization, forPrint }: 
               />
             ) : (
               <div
-                className={`size-20 bg-muted/60 border-2 border-dashed flex items-center justify-center text-xs text-muted-foreground ${
-                  photoShape === "circle" ? "rounded-full" : "rounded-xl"
+                className={`size-20 bg-muted/60 border-2 border-dashed flex items-center justify-center text-xs font-semibold text-muted-foreground ${
+                  photoShape === "circle" ? "rounded-full" : photoShape === "square" ? "rounded-none" : "rounded-xl"
                 }`}
                 style={{ borderColor: "var(--accent)" }}
               >
-                Photo
+                {p.fullName ? p.fullName.charAt(0).toUpperCase() : "Photo"}
               </div>
             )}
           </div>
         )}
 
         <div className="min-w-0 flex-1">
-          <h1>{p.fullName || "Your Name"}</h1>
+          <h1 className="tracking-tight">{p.fullName || "Your Name"}</h1>
           {p.title ? <p className="resume-title">{p.title}</p> : null}
           <ContactLine content={content} />
         </div>
       </header>
 
-      {order.map(renderSection)}
+      {/* Render sections in the configured custom order */}
+      <div className="resume-body-content">
+        {order.map(renderSection)}
+      </div>
     </div>
   );
 }
@@ -506,30 +574,45 @@ function renderGeneric(
 ) {
   const items = content[key];
   if (!items.length) return null;
+
   return (
     <section key={key} style={{ marginBottom: "var(--section-gap, 14px)" }}>
       <SectionTitle layout={layout} customization={customization}>
         {label}
       </SectionTitle>
-      {items.map((it, i) => (
-        <div
-          key={it.id ?? i}
-          className={`resume-item ${isCards ? "rounded-lg border border-border/80 bg-background/50 p-3 shadow-xs mb-3" : ""}`}
-        >
-          <div className="resume-row">
-            <strong>{it.title}</strong>
-            <span>{[it.issuer, it.date].filter(Boolean).join(" • ")}</span>
+      {items.map((it, i) => {
+        const itemUrl = normalizeLinkUrl(it.url);
+
+        return (
+          <div
+            key={it.id ?? i}
+            className={`resume-item ${
+              isCards ? "rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 p-3 shadow-xs mb-3" : "mb-2"
+            }`}
+          >
+            <div className="resume-row flex items-baseline justify-between gap-2">
+              <strong className="text-foreground text-[13px]">{it.title}</strong>
+              <span className="text-xs text-muted-foreground font-medium shrink-0">
+                {[it.issuer, it.date].filter(Boolean).join(" • ")}
+              </span>
+            </div>
+            {it.description ? <p className="resume-p text-xs text-foreground/80 mt-0.5">{it.description}</p> : null}
+            {itemUrl ? (
+              <p className="resume-p resume-sub mt-0.5">
+                <a
+                  href={itemUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-xs text-primary-600 hover:underline font-medium"
+                  title={itemUrl}
+                >
+                  <ExternalLink className="size-2.5" /> {formatDisplayUrl(it.url) || "View Credential"} ↗
+                </a>
+              </p>
+            ) : null}
           </div>
-          {it.description ? <p className="resume-p">{it.description}</p> : null}
-          {it.url ? (
-            <p className="resume-p resume-sub">
-              <a href={it.url} target="_blank" rel="noreferrer" className="text-primary-600 hover:underline">
-                {it.url}
-              </a>
-            </p>
-          ) : null}
-        </div>
-      ))}
+        );
+      })}
     </section>
   );
 }

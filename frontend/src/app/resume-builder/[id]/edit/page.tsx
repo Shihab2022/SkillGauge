@@ -43,6 +43,7 @@ import { Alert, Spinner } from "@/components/ui/Primitives";
 import { cn } from "@/lib/utils";
 import { getErrorMessage, resumesApi } from "@/lib/api";
 import { ALL_TEMPLATES, getTemplate } from "@/lib/resume-templates";
+import { normalizeImageUrl } from "@/lib/url-utils";
 import type { Resume, ResumeContent, ResumeCustomization } from "@/lib/types.resume";
 import { useAssistAi, useAnalyzeResume, useResume, useSnapshotVersion } from "@/hooks/useResumes";
 import { ResumePreview } from "@/components/resume/ResumePreview";
@@ -330,7 +331,17 @@ export default function EditResumePage() {
     );
   }
 
-  const sectionProps = { content, onChange: onChangeContent, onAssist, targetRole };
+  const sectionProps = {
+    content,
+    onChange: onChangeContent,
+    onAssist,
+    targetRole,
+    customization,
+    onCustomizationChange: (next: ResumeCustomization) => {
+      setCustomization(next);
+      stage({ customization: next });
+    },
+  };
 
   const renderSectionForm = () => {
     switch (tab) {
@@ -659,23 +670,65 @@ export default function EditResumePage() {
 
       {/* Profile Photo Customizer */}
       <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-        <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-          <ImageIcon className="size-3.5" /> Profile Photo / Avatar (for Photo Templates &amp; Biographies)
-        </p>
-
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div>
-            <label className="field-label" htmlFor="photo-url-input">Photo Image URL</label>
-            <Input
-              id="photo-url-input"
-              value={customization.photoUrl ?? ""}
-              onChange={(e) => {
-                const next = { ...customization, photoUrl: e.target.value || undefined };
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+            <ImageIcon className="size-3.5" /> Profile Photo / Avatar (for Photo Templates &amp; Biographies)
+          </p>
+          {customization.photoUrl && (
+            <button
+              type="button"
+              onClick={() => {
+                const next = { ...customization, photoUrl: undefined };
                 setCustomization(next);
                 stage({ customization: next });
               }}
-              placeholder="https://example.com/avatar.jpg"
-            />
+              className="text-xs text-rose-600 hover:underline"
+            >
+              Remove
+            </button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <label className="field-label" htmlFor="photo-url-input">Photo Image URL or Upload</label>
+            <div className="space-y-1.5">
+              <Input
+                id="photo-url-input"
+                value={customization.photoUrl ?? ""}
+                onChange={(e) => {
+                  const normalized = normalizeImageUrl(e.target.value);
+                  const next = { ...customization, photoUrl: normalized || undefined };
+                  setCustomization(next);
+                  stage({ customization: next });
+                }}
+                placeholder="Google Drive, Dropbox, Imgur, GitHub or image URL..."
+              />
+              <div className="flex items-center gap-2">
+                <label className="cursor-pointer inline-flex items-center gap-1.5 rounded border border-border bg-muted/40 px-2 py-1 text-xs font-medium text-foreground hover:bg-muted transition-colors">
+                  <Upload className="size-3" /> Upload Image File
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        const dataUrl = String(reader.result || "");
+                        const next = { ...customization, photoUrl: dataUrl };
+                        setCustomization(next);
+                        stage({ customization: next });
+                        toast.success("Photo uploaded successfully!");
+                      };
+                      reader.readAsDataURL(file);
+                    }}
+                  />
+                </label>
+                <span className="text-[11px] text-muted-foreground">JPG, PNG, WebP</span>
+              </div>
+            </div>
           </div>
 
           <div>

@@ -129,22 +129,66 @@ export interface AnalysisReport {
   provider: "openai" | "deterministic";
 }
 
+const TECHNICAL_SKILLS_DICTIONARY: { name: string; pattern: RegExp }[] = [
+  { name: "TypeScript", pattern: /\btypescript\b|\bts\b(?!\s*w)/i },
+  { name: "JavaScript", pattern: /\bjavascript\b|\bjs\b|\bes6\b/i },
+  { name: "React", pattern: /\breact(?:\.js|js)?\b/i },
+  { name: "Next.js", pattern: /\bnext(?:\.js|js)?\b/i },
+  { name: "Node.js", pattern: /\bnode(?:\.js|js)?\b/i },
+  { name: "Python", pattern: /\bpython3?\b/i },
+  { name: "PostgreSQL", pattern: /\bpostgres(?:ql)?\b|\bpsql\b/i },
+  { name: "MongoDB", pattern: /\bmongo(?:db)?\b/i },
+  { name: "Redis", pattern: /\bredis\b/i },
+  { name: "Docker", pattern: /\bdocker\b/i },
+  { name: "Kubernetes", pattern: /\bkubernetes\b|\bk8s\b/i },
+  { name: "AWS", pattern: /\baws\b|\bamazon\s+web\s+services\b/i },
+  { name: "Azure", pattern: /\bazure\b/i },
+  { name: "GCP", pattern: /\bgcp\b|\bgoogle\s+cloud\b/i },
+  { name: "GraphQL", pattern: /\bgraphql\b/i },
+  { name: "REST API", pattern: /\brest(?:ful)?(?:\s+api)?\b/i },
+  { name: "CI/CD", pattern: /\bci\s*\/\s*cd\b|\bcicd\b/i },
+  { name: "Tailwind CSS", pattern: /\btailwind(?:css)?\b/i },
+  { name: "Java", pattern: /\bjava\b(?!\s*script)/i },
+  { name: "Go / Golang", pattern: /\bgolang\b|\bgo\s+language\b/i },
+  { name: "Rust", pattern: /\brustlang\b|\brust\b(?!\s*belt)/i },
+  { name: "C# / .NET", pattern: /\bc#\b|\bcsharp\b|\b\.net\b/i },
+  { name: "SQL", pattern: /\bsql\b/i },
+  { name: "Jest / Vitest", pattern: /\bjest\b|\bvitest\b/i },
+  { name: "Cypress / Playwright", pattern: /\bcypress\b|\bplaywright\b/i },
+  { name: "Microservices", pattern: /\bmicroservices?\b/i },
+  { name: "System Design", pattern: /\bsystem\s+design\b/i },
+  { name: "Git", pattern: /\bgit\b(?!\s*(?:hub|lab))/i },
+  { name: "Linux", pattern: /\blinux\b/i },
+  { name: "Kafka", pattern: /\bkafka\b/i },
+  { name: "RabbitMQ", pattern: /\brabbitmq\b/i },
+  { name: "Machine Learning", pattern: /\bmachine\s+learning\b|\bml\b/i },
+];
+
 export function buildDeterministicReport(content: ResumeContent, text: string, job?: string | null): AnalysisReport {
   const { total, categories } = scoreResumeDeterministic(content);
   const lower = text.toLowerCase();
-  const present = ["javascript", "typescript", "react", "node", "python", "sql", "git", "testing", "api"].filter((k) => lower.includes(k));
+  const present = TECHNICAL_SKILLS_DICTIONARY.filter((s) => s.pattern.test(text)).map((s) => s.name);
   let jobMatch: JobMatch | null = null;
   if (job) {
-    const jd = job.toLowerCase().split(/[^a-z0-9+#]+/).filter((t) => t.length > 2);
-    const uniq = Array.from(new Set(jd)).slice(0, 300);
-    const rset = new Set(lower.split(/[^a-z0-9+#]+/));
-    const hit = uniq.filter((t) => rset.has(t));
-    const score = Math.round(Math.min(95, 30 + (uniq.length ? hit.length / uniq.length : 0) * 120));
+    const jobSkills = TECHNICAL_SKILLS_DICTIONARY.filter((s) => s.pattern.test(job)).map((s) => s.name);
+    const resumeSkills = TECHNICAL_SKILLS_DICTIONARY.filter((s) => s.pattern.test(text)).map((s) => s.name);
+
+    const matched = jobSkills.filter((s) => resumeSkills.includes(s));
+    const missing = jobSkills.filter((s) => !resumeSkills.includes(s));
+
+    const score = jobSkills.length > 0
+      ? Math.round((matched.length / jobSkills.length) * 100)
+      : (resumeSkills.length > 5 ? 80 : 50);
+
     jobMatch = {
-      score, matchedSkills: hit.slice(0, 15), missingSkills: [],
+      score,
+      matchedSkills: matched,
+      missingSkills: missing,
       demonstratedExperience: content.experience.slice(0, 3).map((e) => `${e.jobTitle} at ${e.company}`),
-      bulletImprovements: ["Mirror the job ad verbs in top bullets (only where true)."],
-      emphasis: ["Reorder skills so ad-mentioned skills appear first."],
+      bulletImprovements: missing.length > 0
+        ? [`Incorporate missing required skills (${missing.slice(0, 3).join(", ")}) into work achievements.`]
+        : ["Mirror the job ad verbs in top bullets."],
+      emphasis: [matched.length > 0 ? `Highlight top matching technologies: ${matched.slice(0, 4).join(", ")}.` : "Reorder skills so ad-mentioned skills appear first."],
       checklist: ["Add exact job title once if it matches.", "Quantify one more bullet per role."],
     };
   }
