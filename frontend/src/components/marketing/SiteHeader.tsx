@@ -67,8 +67,17 @@ export function SiteHeader() {
           ))}
           <span className="mx-1 h-5 w-px bg-border" aria-hidden="true" />
           {HEADER_ROUTE_LINKS.map((link) => (
-            <Link key={link.href} href={link.href} className={NAV_LINK_CLASS}>
+            <Link
+              key={link.href}
+              href={resolveNavHref(link.href, pathname)}
+              className={cn(NAV_LINK_CLASS, "inline-flex items-center gap-1.5")}
+            >
               {link.label}
+              {link.badge && (
+                <span className="rounded bg-primary-500/15 px-1.5 py-0.2 text-[10px] font-bold text-primary-600 dark:text-primary-400">
+                  {link.badge}
+                </span>
+              )}
             </Link>
           ))}
         </nav>
@@ -139,11 +148,18 @@ export function SiteHeader() {
             {HEADER_ROUTE_LINKS.map((link) => (
               <Link
                 key={link.href}
-                href={link.href}
+                href={resolveNavHref(link.href, pathname)}
                 onClick={() => setOpen(false)}
                 className={MOBILE_LINK_CLASS}
               >
-                {link.label}
+                <div className="flex items-center justify-between">
+                  <span>{link.label}</span>
+                  {link.badge && (
+                    <span className="rounded bg-primary-500/15 px-1.5 py-0.5 text-[10px] font-bold text-primary-600 dark:text-primary-400">
+                      {link.badge}
+                    </span>
+                  )}
+                </div>
               </Link>
             ))}
             {user && (

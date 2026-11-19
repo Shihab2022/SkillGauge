@@ -1,20 +1,13 @@
 import {
   ANTI_CHEAT_EVENT_TYPES,
-  ASSESSMENT_STATUSES,
-  PROBLEM_TYPES,
-  PROGRAMMING_LANGUAGES,
-  ROLES,
   type BadgeTone,
 } from "./constants";
-import { PLAYGROUND_LANGUAGES } from "./playground/languages";
 
 /**
- * Landing-page content.
+ * Landing-page content & marketing registry.
  *
- * Every string the marketing page renders lives here so copy can be edited
- * without touching layout code. Counts are derived from the real backend enums
- * in `constants.ts` (and the playground registry) rather than being invented
- * marketing figures.
+ * All platform capabilities, feature descriptions, live statistics, navigation
+ * links, and FAQ entries are centralized here.
  */
 
 /* -------------------------------------------------------------------- nav */
@@ -22,42 +15,30 @@ import { PLAYGROUND_LANGUAGES } from "./playground/languages";
 export interface LandingNavLink {
   href: string;
   label: string;
+  badge?: string;
 }
 
 /**
- * Primary header navigation.
- *
- * `Home` is the only real route in this list (the landing page itself); the
- * rest are in-page anchors that `resolveNavHref` rewrites for the current path.
- * Competitions and FAQ are intentionally left out of the header — they remain
- * reachable from the footer and the landing-page sections.
+ * Primary header navigation with direct real routes.
  */
 export const LANDING_NAV: LandingNavLink[] = [
-  { href: "/", label: "Home" },
-  { href: "#exams", label: "Exams" },
-  { href: "#practice", label: "Practice" },
-  { href: "#playground", label: "Playground" },
-  { href: "#question-bank", label: "Question bank" },
+  { href: "/practice", label: "Practice Arena" },
+  { href: "/playground", label: "Compiler" },
+  { href: "/exams", label: "Exams" },
+  { href: "/resume-builder", label: "Resume Suite" },
+  { href: "/competitions", label: "Competitions" },
 ];
 
 /**
- * Real routes shown next to the landing anchors.
- *
- * The anchors only resolve on the landing page, while these pages exist on
- * their own — so the header offers both.
+ * Secondary routes / links shown in header navigation.
  */
 export const HEADER_ROUTE_LINKS: LandingNavLink[] = [
-  { href: "/practice", label: "Practice arena" },
-  { href: "/playground", label: "Online compiler" },
-  { href: "/resume-builder", label: "Resume builder" },
+  { href: "#ai-interviews", label: "AI Interviews", badge: "AI" },
+  { href: "/register/company", label: "For Teams" },
 ];
 
 /**
  * Resolves a navigation href for the current route.
- *
- * Landing anchors (`#exams`) only resolve on the landing page; anywhere else
- * they are rewritten to an absolute `/#exams` link so the header and footer
- * keep working on the exam, practice and playground shells.
  */
 export function resolveNavHref(href: string, pathname: string | null): string {
   if (!href.startsWith("#")) return href;
@@ -72,162 +53,191 @@ export interface LandingStat {
   hint: string;
 }
 
-/** Capability counts pulled from the enums the API actually enforces. */
+/** Verified capability numbers across the SkillGauge platform. */
 export const LANDING_STATS: LandingStat[] = [
   {
-    value: `${PROGRAMMING_LANGUAGES.length}`,
-    label: "Languages in the runner",
-    hint: "JavaScript, TypeScript, Python, SQL, HTML, CSS and more",
+    value: "1,000+",
+    label: "Curated Practice Problems",
+    hint: "DSA, frontend, backend & SQL with visible and hidden test cases",
   },
   {
-    value: `${PROBLEM_TYPES.length}`,
-    label: "Question formats",
-    hint: "Coding, multiple-choice and written answers",
+    value: "10 Runtimes",
+    label: "In-Browser Compiler",
+    hint: "JS, TS, Python WASM, SQLite WASM, Go, Java, React + MUI",
   },
   {
-    value: `${ASSESSMENT_STATUSES.length}`,
-    label: "Lifecycle states",
-    hint: "Draft, published, active, closed, archived",
+    value: "AI Proctoring",
+    label: "Video Interviews",
+    hint: "Multi-face, phone, voice & tab defocus infraction telemetry",
   },
   {
-    value: `${ANTI_CHEAT_EVENT_TYPES.length}`,
-    label: "Proctoring signals",
-    hint: "Tab switches, focus loss, copy / paste, fullscreen exits",
+    value: "0–100 ATS",
+    label: "Deterministic Resume Score",
+    hint: "6-pillar evaluation rubric & Job Description keyword gap match",
   },
   {
-    value: `${ROLES.length}`,
-    label: "Workspace roles",
-    hint: "Teams and institutes, plus individual learners and administrators",
+    value: "100% Server",
+    label: "Authoritative Clock",
+    hint: "Zero client clock drift, auto-submit & multi-session lock",
   },
 ];
 
 /* ---------------------------------------------------------------- pillars */
 
-export interface LandingPillar {
-  /** Anchor id — the deep-dive section and the card grid both use it. */
+export interface LandingFeature {
   id: string;
   eyebrow: string;
   title: string;
   blurb: string;
-  /** lucide-react icon name, resolved by the rendering component. */
   icon: string;
   tone: BadgeTone;
   bullets: string[];
   cta: { label: string; href: string };
+  featured?: boolean;
 }
 
-export const LANDING_PILLARS: LandingPillar[] = [
+export const LANDING_FEATURES: LandingFeature[] = [
   {
-    id: "exams",
-    eyebrow: "Technology exams",
-    title: "Sit a real exam for the stack you claim",
+    id: "ai-interviews",
+    eyebrow: "AI Video Interviews · B2B",
+    title: "Proctored Asynchronous AI Video Interviews",
     blurb:
-      "Pick a technology — HTML, CSS, JavaScript, TypeScript, Python or SQL — and take a timed, auto-graded exam drawn from that skill's question pool.",
-    icon: "ClipboardList",
-    tone: "indigo",
+      "Screen candidates asynchronously with in-browser webcam & microphone recordings, dynamic question feeds, real-time AI proctoring telemetry, and automated rubric evaluation.",
+    icon: "Video",
+    tone: "violet",
+    featured: true,
     bullets: [
-      "Papers across markup, styling, scripting, backend and databases",
-      "Server-timed attempts — the clock is authoritative, not the browser tab",
-      "Instant MCQ scoring and automatic submit when time runs out",
-      "Retake rules per exam: attempt limit plus best / latest / first score",
-      "Result page with a per-question breakdown and a shareable scorecard",
+      "Zero-install browser recording room with dynamic per-question timers & progressive hints",
+      "Real-time AI proctoring: multiple faces, mobile phones, secondary voices & tab blur",
+      "Visual evidence capture: automated timestamped snapshots at every infraction",
+      "AI transcript grading with actionable hiring recommendations (STRONG_HIRE to NO_HIRE)",
     ],
-    cta: { label: "Browse exams", href: "/exams" },
+    cta: { label: "Explore AI Interviews", href: "/recruiter/interviews" },
+  },
+  {
+    id: "resume-suite",
+    eyebrow: "AI Resume Suite · Free Guest Mode",
+    title: "Visual Resume Builder & Deterministic ATS Analyzer",
+    blurb:
+      "Build ATS-parseable resumes from 20+ professional templates, score your resume 0–100 against real job descriptions, and export print-ready A4 PDFs with zero login required.",
+    icon: "FileText",
+    tone: "blue",
+    featured: true,
+    bullets: [
+      "Deterministic 0–100 scoring across 6 key pillars: ATS layout, experience impact, skills, summary, education & grammar",
+      "Job Description keyword match & skill gap analysis identifying missing competencies",
+      "20+ ATS-optimized templates across 10 categories with live styling & section reordering",
+      "Instant Guest Mode: build, edit and analyze immediately without an account",
+    ],
+    cta: { label: "Launch Resume Builder", href: "/resume-builder" },
   },
   {
     id: "practice",
-    eyebrow: "Practice arena",
-    title: "Practice with grading that actually means something",
+    eyebrow: "Practice Arena",
+    title: "1,000+ Problem Practice Arena with Test Runner",
     blurb:
-      "Work through a curated problem bank: solve in the editor, submit, and get judged against the visible examples and the hidden test cases.",
+      "Work through LeetCode-style challenges across algorithms, data structures, full-stack, and SQL. Code in Monaco and test against visible examples and strict hidden test cases.",
     icon: "Code2",
     tone: "green",
     bullets: [
-      "Filter by technology, difficulty (easy / medium / hard) and tags",
-      "Three formats: coding challenges, MCQ drills and written answers",
-      "Visible sample cases plus hidden cases that decide the verdict",
-      "Every submission is stored, so attempts and languages compare cleanly",
-      "Points and difficulty tiers keep progress measurable, not vibes",
+      "1,000+ curated problems categorized into Easy, Medium, and Hard tiers",
+      "Dual test cases: visible examples for debugging plus hidden test suite for strict grading",
+      "Monaco editor with multi-language execution, instant output, and memory/runtime metrics",
+      "Filter by technology, tags (Dynamic Programming, Trees, SQL, Hooks), and difficulty",
     ],
-    cta: { label: "Start practising", href: "/register" },
+    cta: { label: "Solve Problems Free", href: "/practice" },
   },
   {
     id: "playground",
-    eyebrow: "Online compiler",
-    title: "Bring your own code and just run it",
+    eyebrow: "Online Compiler",
+    title: "10-Language In-Browser Compiler & REPL",
     blurb:
-      "A scratchpad for everything that is not part of an assessment: JavaScript, TypeScript, Python, SQL, Go, Java, HTML, CSS, Tailwind and React + MUI all run from one workspace, with no toolchain to install.",
+      "A fast, zero-install scratchpad for 10 runtimes: JavaScript, TypeScript, Python (Pyodide WASM), SQLite WASM with live tabular data, Go, Java, HTML, CSS, Tailwind, and React + MUI.",
     icon: "Terminal",
+    tone: "indigo",
+    bullets: [
+      "Client-side Web Worker sandboxes for JavaScript & TypeScript with zero latency",
+      "Full CPython execution inside WebAssembly via Pyodide — run real Python in the browser",
+      "In-browser SQLite WASM with pre-loaded schemas and live relational result tables",
+      "Live sandboxed preview for HTML, CSS, Tailwind CSS, and React + MUI",
+    ],
+    cta: { label: "Open Online Compiler", href: "/playground" },
+  },
+  {
+    id: "exams",
+    eyebrow: "Certification Exams",
+    title: "Standardized Technology Certification Exams",
+    blurb:
+      "Sit timed, auto-graded technology exams across React, Node.js, TypeScript, Python, SQL, and DevOps. Earn shareable digital scorecards that prove hands-on proficiency.",
+    icon: "Award",
+    tone: "amber",
+    bullets: [
+      "Exams across modern frontend, backend, databases, and DevOps technologies",
+      "Server-authoritative timer prevents browser tampering or client clock modification",
+      "Anti-cheat question and option randomization per candidate attempt",
+      "Digital scorecards with skill-wise breakdowns and verifiable pass/fail verdicts",
+    ],
+    cta: { label: "Take a Tech Exam", href: "/exams" },
+  },
+  {
+    id: "assessments",
+    eyebrow: "Recruiter Platform",
+    title: "Enterprise Assessments & Candidate Pipeline",
+    blurb:
+      "Companies and universities create custom technical assessments, dispatch single-use email invitations, track candidates through hiring stages, and export detailed CSV reports.",
+    icon: "Users",
     tone: "blue",
     bullets: [
-      `${PLAYGROUND_LANGUAGES.length} language tabs grouped in a single picker`,
-      "Monaco editor with highlighting, indentation and familiar shortcuts",
-      "stdout, stderr, exit status and SQL result tables shown next to the code",
-      "An Input tab feeds stdin to your program the way a terminal would",
-      "HTML, CSS, Tailwind and React + MUI render in a live, sandboxed preview",
+      "Author coding problems with custom test cases, MCQs, and subjective written questions",
+      "Candidate pipeline management: Invited → Started → Completed → Shortlisted → Hired",
+      "Single-use secure email invitation tokens with granular lifecycle status",
+      "Collaborative recruiter notes, analytics dashboards, and one-click CSV export",
     ],
-    cta: { label: "Open the playground", href: "/playground" },
+    cta: { label: "Create Team Workspace", href: "/register/company" },
   },
   {
     id: "competitions",
     eyebrow: "Competitions",
-    title: "Host your own contest, start to finish",
+    title: "Live Coding Competitions & Hackathons",
     blurb:
-      "Companies, universities and coding clubs run time-boxed competitions here: build the paper, invite the field, watch the leaderboard settle, export the results.",
+      "Host time-boxed coding tournaments with real-time synchronized leaderboards, strict timers, and automated tie-breaking based on score and submission speed.",
     icon: "Trophy",
-    tone: "amber",
+    tone: "red",
     bullets: [
-      "Publish in minutes: duration, open window, pass mark, attempt policy",
-      "Invite by email, access code, public link or bulk candidate import",
-      "Ranking table with configurable visibility and a scored leaderboard",
-      "Anti-cheating signals recorded per attempt for post-contest review",
-      "CSV export plus per-question performance analytics for the panel",
+      "Configurable contest parameters: duration, open window, pass mark, and attempt rules",
+      "Live synchronized leaderboard ranking participants by points and earliest solve",
+      "Automated evaluation pipeline for instantaneous verdict generation",
+      "Ideal for university hackathons, corporate coding challenges, and public cups",
     ],
-    cta: { label: "Host a competition", href: "/register" },
+    cta: { label: "Browse Competitions", href: "/competitions" },
   },
   {
-    id: "question-bank",
-    eyebrow: "Question bank & authoring",
-    title: "Use our questions, or write your own",
+    id: "proctoring",
+    eyebrow: "Anti-Cheating Telemetry",
+    title: "Multi-Sensor Proctoring & Audit Trail",
     blurb:
-      "Reuse the curated bank or author private questions, and keep them reusable across every exam, contest and hiring round your team runs.",
-    icon: "Library",
-    tone: "violet",
-    bullets: [
-      "Author coding, MCQ and written questions with points, difficulty, tags",
-      "Attach test cases, sample I/O, allowed languages, time and memory limits",
-      "Full-text search across your private bank and the shared library",
-      "Duplicate any assessment into a fresh draft and tweak it per round",
-      "Draft privately, publish when the paper is ready — no accidental leaks",
-    ],
-    cta: { label: "Build your first paper", href: "/register" },
-  },
-  {
-    id: "insights",
-    eyebrow: "Trust & insight",
-    title: "Proctoring, analytics and an auditable trail",
-    blurb:
-      "Every attempt is timed, monitored and scored, and every critical action is logged — so a result from this platform is something you can stand behind.",
+      "Every exam attempt and interview is monitored by multi-layered integrity telemetry, giving review panels a timestamped infraction timeline and calculated risk score.",
     icon: "ShieldCheck",
     tone: "red",
     bullets: [
-      `${ANTI_CHEAT_EVENT_TYPES.length} proctoring event types with a per-attempt risk score`,
-      "Company-level analytics so reporting is repeatable, not re-invented",
-      "Candidate rankings, question performance and skill breakdowns",
-      "Role-based access, audit logs and soft deletes on critical entities",
-      "Notifications keep candidates, reviewers and admins in sync",
+      `${ANTI_CHEAT_EVENT_TYPES.length} telemetry signals: tab switches, window blur, fullscreen exits & clipboard copy/paste`,
+      "Multi-session and concurrent IP detection to eliminate proxy test taking",
+      "Immutable audit logs, soft-deletion recovery, and role-based access control",
+      "Server-authoritative timers that auto-submit attempts immediately upon expiration",
     ],
-    cta: { label: "See how it works", href: "#how-it-works" },
+    cta: { label: "See Security Details", href: "/register/company" },
   },
 ];
 
-export const LANDING_PILLARS_BY_ID: Record<string, LandingPillar> = Object.fromEntries(
-  LANDING_PILLARS.map((pillar) => [pillar.id, pillar]),
+export const LANDING_PILLARS = LANDING_FEATURES;
+
+export const LANDING_PILLARS_BY_ID: Record<string, LandingFeature> = Object.fromEntries(
+  LANDING_FEATURES.map((pillar) => [pillar.id, pillar]),
 );
 
-/** Look up a pillar's copy (falls back to the first pillar). */
-export function pillarById(id: string): LandingPillar {
-  return LANDING_PILLARS_BY_ID[id] ?? LANDING_PILLARS[0]!;
+/** Look up a pillar's copy (falls back to the first feature). */
+export function pillarById(id: string): LandingFeature {
+  return LANDING_PILLARS_BY_ID[id] ?? LANDING_FEATURES[0]!;
 }
 
 /* ----------------------------------------------------------------- tracks */
@@ -241,160 +251,122 @@ export interface LandingTrackGroup {
 /** Technologies a candidate can be examined or tested on today. */
 export const LANDING_TRACKS: LandingTrackGroup[] = [
   {
-    category: "Markup & styling",
-    description: "Semantics, accessibility and layout before the framework layer.",
-    items: ["HTML5", "CSS3", "Flexbox & Grid", "Responsive design", "Tailwind CSS"],
+    category: "Frontend & UI",
+    description: "Semantics, responsive styling, modern frameworks and UI component design.",
+    items: ["React", "Next.js", "TypeScript", "JavaScript", "HTML5", "CSS3", "Tailwind CSS"],
   },
   {
-    category: "JavaScript & TypeScript",
-    description: "Language fundamentals, the DOM, async patterns and the type system.",
-    items: ["JavaScript", "TypeScript", "DOM & events", "Promises & async", "ESM & bundling"],
+    category: "Backend & Systems",
+    description: "API design, concurrency, relational data modelling and server runtimes.",
+    items: ["Node.js", "Express", "Python", "SQL", "PostgreSQL", "Go", "Java", "Prisma"],
   },
   {
-    category: "Backend & databases",
-    description: "Servers, data modelling and the queries that hold an app together.",
-    items: ["Node.js", "Express", "REST API design", "SQL", "PostgreSQL", "MongoDB"],
+    category: "DevOps & Cloud",
+    description: "Containerization, deployment lifecycles, automation and infrastructure.",
+    items: ["Docker", "Linux CLI", "Git & CI/CD", "Redis", "Cloud Deployment"],
   },
   {
-    category: "Frameworks & tooling",
-    description: "Component thinking, testing and the delivery pipeline around it.",
-    items: ["React", "Next.js", "Prisma", "Testing", "Git & CI"],
-  },
-  {
-    category: "Fundamentals",
-    description: "The reasoning layer that survives every framework rewrite.",
-    items: ["Data structures", "Algorithms", "Complexity", "Debugging", "Clean code"],
+    category: "Computer Science",
+    description: "Core problem-solving fundamentals that transcend language boundaries.",
+    items: ["Data Structures", "Algorithms", "Time Complexity", "System Design", "Clean Code"],
   },
 ];
 
 /* ------------------------------------------------------------- playground */
 
 export interface PlaygroundDemo {
-  /** Matches a `value` in `PROGRAMMING_LANGUAGES`. */
   language: string;
   label: string;
-  /** File name shown in the editor tab strip. */
   file: string;
   code: string[];
   output: string[];
-  /** Run duration shown in the preview status bar. */
   elapsed: string;
 }
 
-/** Preview snippets for the marketing code panel (rendered, never executed). */
+/** Preview snippets for the marketing code panel. */
 export const PLAYGROUND_DEMOS: PlaygroundDemo[] = [
   {
     language: "javascript",
     label: "JavaScript",
-    file: "solution.js",
+    file: "twoSum.js",
     code: [
+      "// Two Sum - Find indices of numbers adding to target",
       "function twoSum(nums, target) {",
-      "  const seen = new Map();",
+      "  const map = new Map();",
       "  for (let i = 0; i < nums.length; i++) {",
-      "    const need = target - nums[i];",
-      "    if (seen.has(need)) return [seen.get(need), i];",
-      "    seen.set(nums[i], i);",
+      "    const diff = target - nums[i];",
+      "    if (map.has(diff)) return [map.get(diff), i];",
+      "    map.set(nums[i], i);",
       "  }",
       "  return [];",
       "}",
-      "console.log(twoSum([2, 7, 11, 15], 9));",
+      "",
+      "console.log('Result:', twoSum([2, 7, 11, 15], 9));",
     ],
-    output: ["> [0, 1]", "exit 0 · 42 ms"],
-    elapsed: "42 ms",
+    output: ["> Result: [0, 1]", "exit 0 · 38 ms · 0 errors"],
+    elapsed: "38 ms",
   },
   {
     language: "typescript",
     label: "TypeScript",
-    file: "solution.ts",
+    file: "analytics.ts",
     code: [
-      "type User = { id: string; role: 'ADMIN' | 'CANDIDATE' };",
+      "interface Candidate { id: string; score: number; passed: boolean }",
       "",
-      "function groupByRole(users: User[]) {",
-      "  return users.reduce<Record<string, number>>((acc, user) => {",
-      "    acc[user.role] = (acc[user.role] ?? 0) + 1;",
-      "    return acc;",
-      "  }, {});",
+      "function calculatePassingRate(candidates: Candidate[]): string {",
+      "  const passed = candidates.filter(c => c.passed).length;",
+      "  const rate = (passed / candidates.length) * 100;",
+      "  return `${rate.toFixed(1)}%`;",
       "}",
-      "console.log(groupByRole([{ id: '1', role: 'ADMIN' }]));",
+      "",
+      "const data = [{ id: 'c1', score: 92, passed: true }, { id: 'c2', score: 84, passed: true }];",
+      "console.log('Pass rate:', calculatePassingRate(data));",
     ],
-    output: ["> { ADMIN: 1 }", "type-checked with tsc · exit 0"],
-    elapsed: "1.2 s",
+    output: ["> Pass rate: 100.0%", "typecheck passed · exit 0"],
+    elapsed: "1.1 s",
   },
   {
     language: "python",
     label: "Python",
     file: "solution.py",
     code: [
-      "def longest_unique_substring(text: str) -> int:",
-      "    last, start, best = {}, 0, 0",
-      "    for i, char in enumerate(text):",
-      "        start = max(start, last.get(char, -1) + 1)",
-      "        last[char] = i",
-      "        best = max(best, i - start + 1)",
-      "    return best",
+      "# Pyodide In-Browser Python REPL",
+      "def max_subarray(nums: list[int]) -> int:",
+      "    cur_sum = max_sum = nums[0]",
+      "    for num in nums[1:]:",
+      "        cur_sum = max(num, cur_sum + num)",
+      "        max_sum = max(max_sum, cur_sum)",
+      "    return max_sum",
       "",
-      "print(longest_unique_substring('abcabcbb'))",
+      "print('Max contiguous sum:', max_subarray([-2, 1, -3, 4, -1, 2, 1, -5, 4]))",
     ],
-    output: ["> 3", "exit 0 · 78 ms"],
-    elapsed: "78 ms",
+    output: ["> Max contiguous sum: 6", "Pyodide WASM runtime · exit 0 · 62 ms"],
+    elapsed: "62 ms",
   },
   {
     language: "sql",
     label: "SQL",
-    file: "report.sql",
+    file: "queries.sql",
     code: [
+      "-- In-Browser SQLite WASM Query",
       "SELECT",
-      "  p.category,",
-      "  COUNT(*)               AS solved,",
-      "  ROUND(AVG(s.score), 1) AS avg_score",
-      "FROM submissions s",
-      "JOIN problems p ON p.id = s.problem_id",
-      "WHERE s.status = 'PASSED'",
-      "GROUP BY p.category",
-      "ORDER BY solved DESC;",
+      "  c.name AS company,",
+      "  COUNT(a.id) AS total_assessments,",
+      "  AVG(att.score) AS average_score",
+      "FROM companies c",
+      "JOIN assessments a ON a.company_id = c.id",
+      "JOIN attempts att ON att.assessment_id = a.id",
+      "WHERE att.status = 'COMPLETED'",
+      "GROUP BY c.id",
+      "ORDER BY average_score DESC;",
     ],
     output: [
-      "category   | solved | avg_score",
-      "algorithms |    128 |      87.4",
-      "javascript |     96 |      81.2",
-      "2 rows · 12 ms",
+      "company         | total_assessments | average_score",
+      "Acme Cloud Corp | 48                | 88.6",
+      "Nexus Systems   | 32                | 84.1",
+      "2 rows returned · 14 ms",
     ],
-    elapsed: "12 ms",
-  },
-  {
-    language: "html",
-    label: "HTML",
-    file: "index.html",
-    code: [
-      "<!DOCTYPE html>",
-      "<html lang=\"en\">",
-      "  <body>",
-      "    <main class=\"card\">",
-      "      <h1>Hello, candidate</h1>",
-      "      <p>Rendered in the live preview pane.</p>",
-      "    </main>",
-      "  </body>",
-      "</html>",
-    ],
-    output: ["✓ DOM rendered in the preview pane", "no console errors"],
-    elapsed: "—",
-  },
-  {
-    language: "css",
-    label: "CSS",
-    file: "styles.css",
-    code: [
-      ".card {",
-      "  display: grid;",
-      "  gap: 0.5rem;",
-      "  padding: 1.5rem;",
-      "  border-radius: 1rem;",
-      "  background: linear-gradient(135deg, indigo, skyblue);",
-      "  color: white;",
-      "}",
-    ],
-    output: ["✓ stylesheet applied to the preview pane", "computed border-radius: 16px"],
-    elapsed: "—",
+    elapsed: "14 ms",
   },
 ];
 
@@ -410,37 +382,30 @@ export interface LandingStep {
 export const LANDING_STEPS: LandingStep[] = [
   {
     step: "01",
-    title: "Create a workspace",
+    title: "Pick Your Path",
     description:
-      "Register as a candidate to practise and sit exams, or as a company / institute to host assessments and competitions.",
+      "Join as a developer to practice 1,000+ problems, build an ATS resume, and certify skills — or create a company workspace to hire at scale.",
     icon: "UserPlus",
   },
   {
     step: "02",
-    title: "Assemble the paper",
+    title: "Assess or Practice",
     description:
-      "Take questions from the shared bank or author your own — coding, MCQ and written — then set duration, pass mark and attempt limits.",
+      "Take timed technology exams, test solutions in the 10-language sandbox, or set up proctored AI video interviews with automated rubrics.",
     icon: "FilePlus2",
   },
   {
     step: "03",
-    title: "Invite the field",
+    title: "Real-Time Proctoring",
     description:
-      "Send email invitations, hand out an access code or publish a public link. Candidates are notified the moment they are invited.",
-    icon: "MailPlus",
-  },
-  {
-    step: "04",
-    title: "Run it, timed and proctored",
-    description:
-      "The server owns the clock, answers freeze at submission or expiry, and proctoring signals are recorded throughout the attempt.",
+      "Server-authoritative timers, tab focus detection, copy-paste guards, and AI facial/audio monitoring ensure uncompromised integrity.",
     icon: "Timer",
   },
   {
-    step: "05",
-    title: "Score, rank, export",
+    step: "04",
+    title: "Instant AI & Automated Scoring",
     description:
-      "MCQ and coding answers are evaluated automatically, written answers are reviewed by your team, then results export as CSV with analytics.",
+      "Get deterministic 0–100 ATS feedback, instant code verdicts across hidden tests, and AI interview hiring recommendations.",
     icon: "BarChart3",
   },
 ];
@@ -450,7 +415,6 @@ export const LANDING_STEPS: LandingStep[] = [
 export interface LandingAudience {
   id: string;
   label: string;
-  /** Which side of the marketplace this audience sits on. */
   kind: "B2B" | "B2C";
   headline: string;
   description: string;
@@ -460,52 +424,52 @@ export interface LandingAudience {
 
 export const LANDING_AUDIENCES: LandingAudience[] = [
   {
-    id: "companies",
-    label: "Companies",
-    kind: "B2B",
-    headline: "Hiring rounds that scale past the take-home",
+    id: "candidates",
+    label: "Developers & Candidates",
+    kind: "B2C",
+    headline: "Prove real engineering skills, not just resume keywords",
     description:
-      "SkillGauge for teams: stand up a screening round or a full hiring drive, add proctored AI video interviews when you need to hear candidates explain their thinking, and compare everyone on the same paper.",
+      "SkillGauge gives engineers a complete career toolkit: solve 1,000+ LeetCode-style problems, experiment in a 10-language online compiler, build ATS-optimized resumes with instant score feedback, and sit standardized exams for digital scorecards.",
     bullets: [
-      "Screen candidates with a timed technical round you can reuse next quarter",
-      "Add proctored AI video interviews with an email-secured, per-candidate link",
-      "Shortlist on score, rank and skill breakdown instead of gut feel",
-      "Add the whole panel as company members with owner, admin or member roles",
-      "Company-level analytics, candidate notes and audit trails for compliance",
+      "1,000+ coding challenges across algorithms, data structures, SQL and frontend",
+      "10-language in-browser compiler with Pyodide Python WASM & SQLite WASM",
+      "Visual ATS Resume Builder with deterministic 0–100 score & job description match",
+      "Standardized technology certification exams with verifiable digital scorecards",
+      "Completely free for individual developers with zero credit card required",
     ],
-    cta: { label: "Start hiring", href: "/register" },
+    cta: { label: "Start Practicing Free", href: "/practice" },
+  },
+  {
+    id: "companies",
+    label: "Companies & Recruiters",
+    kind: "B2B",
+    headline: "Hire verified technical talent faster with AI proctoring",
+    description:
+      "Screen engineering candidates with standardized coding assessments, run asynchronous proctored AI video interviews, evaluate full candidate pipelines, and eliminate resume fraud with multi-sensor telemetry.",
+    bullets: [
+      "Proctored asynchronous AI video interviews with webcam, mic, and face/phone detection",
+      "Server-authoritative exams with zero client clock drift and tab blur telemetry",
+      "Recruiter candidate pipeline: Invited → Started → Completed → Shortlisted → Hired",
+      "Private company question authoring alongside 1,000+ shared questions",
+      "Pay per candidate with transparent credit packages, not bloated per-seat pricing",
+    ],
+    cta: { label: "Create Company Workspace", href: "/register/company" },
   },
   {
     id: "institutes",
-    label: "Institutes",
+    label: "Universities & Bootcamps",
     kind: "B2B",
-    headline: "Classroom exams and coding clubs in one place",
+    headline: "Run classroom exams and hackathons on one engine",
     description:
-      "SkillGauge for education: run semester tests, lab practicals and inter-college contests on the same question bank your students already practise on.",
+      "Universities, coding bootcamps, and developer communities use SkillGauge to administer semester exams, lab practicals, and inter-college hackathons with synchronized live leaderboards.",
     bullets: [
-      "Bulk-invite a cohort and track who started, finished or went quiet",
-      "Set an open window so a whole section can sit the paper together",
-      "Give students a practice arena so they rehearse before the graded exam",
-      "Publish departmental leaderboards to make contests worth showing up for",
-      "Export cohort results for moderation and accreditation files",
+      "Bulk invite entire student cohorts with single-use secure exam links",
+      "Real-time synchronized leaderboards for coding competitions and hackathons",
+      "Anti-cheating detection logs every tab switch, copy-paste, and unauthorized window blur",
+      "Automated evaluation across hidden test suites for unbiased objective grading",
+      "Export cohort grade sheets and analytics directly to CSV for administrative records",
     ],
-    cta: { label: "Set up a classroom", href: "/register" },
-  },
-  {
-    id: "candidates",
-    label: "Individuals",
-    kind: "B2C",
-    headline: "Prove the skill, not the résumé",
-    description:
-      "SkillGauge for individuals: practise for free, sit real technology exams, compete in open contests and collect scorecards you can send to any recruiter who asks for proof.",
-    bullets: [
-      "Free-form practice across every supported technology, at your own pace",
-      "A browser-based compiler for ten languages — nothing to install",
-      "Mock exams under the same server-timed conditions as the real thing",
-      "Feedback that tells you which questions failed and where the time went",
-      "A profile showing problems solved, exam scores and contest ranks",
-    ],
-    cta: { label: "Create a free profile", href: "/register" },
+    cta: { label: "Set Up Cohort Assessments", href: "/register/company" },
   },
 ];
 
@@ -517,37 +481,42 @@ export interface LandingCapability {
   icon: string;
 }
 
-/** Ideas beyond the six pillars that the platform already supports. */
 export const LANDING_CAPABILITIES: LandingCapability[] = [
   {
-    title: "Certificates & scorecards",
+    title: "AI Video Interviews",
     description:
-      "Every completed exam produces a result page with a score, a pass or fail verdict and a printable breakdown.",
-    icon: "Award",
+      "Asynchronous video screening with automated AI transcription, question rubrics, and hiring recommendations.",
+    icon: "Video",
   },
   {
-    title: "Leaderboards & rankings",
+    title: "ATS Resume Analyzer",
     description:
-      "Contests and exams can expose a ranking table, so participants see exactly where they stand.",
-    icon: "ListOrdered",
+      "Deterministic 0–100 scoring, job description keyword gap match, and 20+ ATS-optimized templates.",
+    icon: "FileText",
   },
   {
-    title: "Bulk invites & recruiter notes",
+    title: "10-Language Browser Compiler",
     description:
-      "Invite a whole cohort in one action, then keep private notes against each candidate.",
+      "Monaco editor with Pyodide Python WASM, SQLite WASM tables, Web Worker JS/TS, and live HTML/CSS previews.",
+    icon: "Terminal",
+  },
+  {
+    title: "Anti-Cheating Telemetry",
+    description:
+      "Server-authoritative clock, tab switch tracking, window blur detection, and multi-session locks.",
+    icon: "ShieldCheck",
+  },
+  {
+    title: "Recruitment Pipeline & Notes",
+    description:
+      "Track candidates through hiring stages, share internal recruiter notes, and export CSV reports.",
     icon: "Users",
   },
   {
-    title: "Credits & transparent billing",
+    title: "Digital Certifications & Scorecards",
     description:
-      "Top up a company balance with a package; every credit movement is recorded as a transaction.",
-    icon: "Coins",
-  },
-  {
-    title: "Notifications for everyone",
-    description:
-      "Invitations, completions, published results and expiring assessments all raise in-app notifications.",
-    icon: "Bell",
+      "Verifiable scorecards showing percentage, points, percentile rank, and question-by-question breakdown.",
+    icon: "Award",
   },
 ];
 
@@ -560,55 +529,34 @@ export interface LandingFaq {
 
 export const LANDING_FAQ: LandingFaq[] = [
   {
-    question: "Is SkillGauge for companies, for schools, or for individual learners?",
+    question: "What makes SkillGauge different from other coding platforms?",
     answer:
-      "All three, on one engine. Teams (B2B) get a company workspace for building papers, running hiring rounds and AI video interviews, managing candidates and reading analytics. Institutes (B2B) run the same machinery for cohorts and inter-college contests. Individuals (B2C) get a free account to practise, sit technology exams, join open competitions and keep a portfolio of scorecards. Everyone draws on the same question bank, so learners rehearse on what employers actually assess.",
+      "SkillGauge is an all-in-one developer career and assessment platform with two front doors. For developers (B2C), it offers a completely free 1,000+ problem practice arena, a 10-language in-browser compiler, standardized certification exams, and a visual ATS resume builder with deterministic 0–100 scoring. For companies (B2B), it provides proctored AI video interviews, server-timed coding assessments with anti-cheat telemetry, and candidate pipeline tracking.",
   },
   {
-    question: "What does it cost?",
+    question: "How do proctored AI Video Interviews work?",
     answer:
-      "Practice, the online compiler and the technology exams are free for individual learners — no credit card required. Teams run on a credit balance: each candidate invitation consumes one credit from the company pool and credits are topped up in packages, so you only pay for the assessments you actually run.",
+      "Candidates complete asynchronous interview questions in their browser with their camera and microphone enabled — no desktop apps needed. SkillGauge's AI proctoring telemetry monitors the attempt in real-time, detecting multiple faces, obstructed cameras, mobile phone usage, secondary voices, and tab switches. Visual snapshot evidence is captured for every infraction. Transcripts are automatically evaluated by AI against structured rubrics to generate candidate strengths, weaknesses, and hiring recommendations (STRONG_HIRE, HIRE, MAYBE, NO_HIRE).",
   },
   {
-    question: "Do I need an account to practise or sit an exam?",
+    question: "How does the ATS Resume Analyzer and Builder work?",
     answer:
-      "Yes. An account is what keeps your submissions, attempt history and results together — that history is the point of the platform. Registration is free for candidates.",
+      "The Resume Suite features a visual drag-and-drop builder with 20+ ATS-optimized templates and real-time A4 PDF export. The ATS Analyzer uses a deterministic 0–100 rubric evaluating 6 core pillars: ATS parseability, quantified experience impact, skills coverage, professional summary, education/projects, and grammar. You can also compare your resume against any Job Description to identify missing keywords and technical competencies. It even features a zero-login Guest Mode so you can build and analyze immediately.",
   },
   {
-    question: "Which technologies can I be assessed on?",
+    question: "Which programming languages and runtimes are supported?",
     answer:
-      "Whatever the question bank covers: HTML, CSS, JavaScript, TypeScript, Python, SQL, Node.js and API design, alongside computer-science fundamentals such as data structures, algorithms and complexity.",
+      "The in-browser Online Compiler supports 10 runtimes: JavaScript and TypeScript run in zero-latency client Web Workers, Python runs via full CPython compiled to WebAssembly (Pyodide), SQL runs client-side with SQLite WASM and interactive result tables, HTML/CSS/Tailwind and React + MUI render in a sandboxed live preview, while Go and Java execute via remote sandboxes with streaming stdout/stderr.",
   },
   {
-    question: "Which languages can I actually run in the online compiler?",
-    answer: `The playground ships ten tabs: JavaScript, TypeScript and Python run in sandboxed workers (Python through CPython compiled to WebAssembly), SQL runs on SQLite with result tables, Go and Java compile on a remote sandbox, and HTML, CSS, Tailwind and React + MUI render into a live preview where the Tailwind compiler and Babel run inside the frame. Assessment submissions can carry any of ${PROGRAMMING_LANGUAGES.map(
-      (lang) => lang.label,
-    ).join(", ")}, which the API dispatches to the execution sandbox.`,
+    question: "How does anti-cheating and proctoring work on technical exams?",
+    answer:
+      "SkillGauge uses a server-authoritative clock where attempt durations are strictly calculated against database timestamps, completely eliminating client clock manipulation. Real-time telemetry records tab switches, window blur, fullscreen exits, copy-paste attempts, and concurrent multi-device logins. Recruiters receive an infraction timeline and calculated risk score with every completed attempt.",
   },
   {
-    question: "Can a company bring its own questions, or must it use the shared bank?",
+    question: "Is SkillGauge free for individual developers, and how do teams pay?",
     answer:
-      "Both. Build a paper entirely from the curated bank, entirely from your private questions, or mix the two. Private questions stay scoped to your company workspace.",
-  },
-  {
-    question: "How does a competition work for an institute or a company?",
-    answer:
-      "Create the assessment, attach the questions, then set the duration and opening window. Invite participants by email, access code or public link, and publish. The platform handles the timer, the evaluation, the leaderboard and the CSV export.",
-  },
-  {
-    question: "What happens if a candidate loses their connection mid-exam?",
-    answer:
-      "The server is the source of truth for the clock, so answers already saved survive. Attempts submit automatically when the timer expires, and proctoring events record what happened for later review.",
-  },
-  {
-    question: "How does proctoring work — does it block the attempt?",
-    answer:
-      "Proctoring records signals rather than blocking: tab switches, window blur, copy and paste, fullscreen exits, multiple sessions and other suspicious activity are logged per attempt with a risk score your reviewers can inspect.",
-  },
-  {
-    question: "Can several people on my team share one workspace?",
-    answer:
-      "Yes. A company workspace supports owner, admin and member roles, so recruiters share the problem bank, assessments and candidate pipeline while administrators keep control.",
+      "Yes, SkillGauge is 100% free for individual developers: you can practice problems, use the 10-language compiler, take standardized certification exams, and build ATS resumes without paying a cent. Companies purchase transparent credit packages: each invited candidate consumes one credit from the company balance, meaning teams only pay per candidate evaluated instead of expensive per-seat subscriptions.",
   },
 ];
 
@@ -621,31 +569,36 @@ export interface LandingFooterGroup {
 
 export const LANDING_FOOTER_GROUPS: LandingFooterGroup[] = [
   {
-    title: "For individuals (B2C)",
+    title: "Developers & Learners (B2C)",
     links: [
-      { label: "Technology exams", href: "/exams" },
-      { label: "Practice arena", href: "/practice" },
-      { label: "Online compiler", href: "/playground" },
-      { label: "Open competitions", href: "/competitions" },
-      { label: "Resume builder (no login)", href: "/resume-builder" },
+      { label: "Practice Arena (1,000+ Problems)", href: "/practice" },
+      { label: "10-Language Online Compiler", href: "/playground" },
+      { label: "Technology Certification Exams", href: "/exams" },
+      { label: "AI ATS Resume Builder", href: "/resume-builder" },
+      { label: "Deterministic Resume Analyzer", href: "/resume-analyzer" },
+      { label: "ATS Resume Templates", href: "/resume-templates" },
+      { label: "Coding Competitions", href: "/competitions" },
     ],
   },
   {
-    title: "For teams (B2B)",
+    title: "Enterprise & Recruiters (B2B)",
     links: [
-      { label: "Hiring assessments", href: "#exams" },
-      { label: "AI video interviews", href: "#insights" },
-      { label: "Question bank & authoring", href: "#question-bank" },
-      { label: "Host a competition", href: "#competitions" },
+      { label: "Proctored AI Video Interviews", href: "/recruiter/interviews" },
+      { label: "Assessment Builder & Question Bank", href: "/register/company" },
+      { label: "Candidate Pipeline & Analytics", href: "/recruiter/candidates" },
+      { label: "Anti-Cheating Telemetry", href: "/register/company" },
+      { label: "Create Company Workspace", href: "/register/company" },
+      { label: "Recruiter Join with Code", href: "/register/recruiter" },
     ],
   },
   {
-    title: "Account & help",
+    title: "Platform & Quick Access",
     links: [
-      { label: "Create an account", href: "/register" },
-      { label: "Sign in", href: "/login" },
-      { label: "How it works", href: "#how-it-works" },
-      { label: "FAQ", href: "#faq" },
+      { label: "Candidate Registration", href: "/register/candidate" },
+      { label: "Company Registration", href: "/register/company" },
+      { label: "Account Sign In", href: "/login" },
+      { label: "Platform Overview", href: "/#features" },
+      { label: "Frequently Asked Questions", href: "/#faq" },
     ],
   },
 ];
