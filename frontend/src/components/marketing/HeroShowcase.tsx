@@ -129,16 +129,24 @@ export function HeroShowcase() {
               </div>
 
               {/* Face Tracking Bounding Box */}
-              <div className="relative flex flex-col items-center justify-center p-6 border border-emerald-400/60 rounded-xl bg-emerald-500/5 shadow-[0_0_15px_rgba(16,185,129,0.15)]">
-                <div className="size-16 rounded-full bg-slate-800/90 border border-slate-700 flex items-center justify-center text-slate-300">
-                  <Bot className="size-8 text-primary-400" />
+              <div className="relative flex flex-col items-center justify-center p-4 sm:p-5 border border-emerald-400/60 rounded-2xl bg-emerald-500/5 shadow-[0_0_20px_rgba(16,185,129,0.15)]">
+                <div className="relative size-14 rounded-full bg-slate-800 border-2 border-emerald-400/60 flex items-center justify-center text-slate-300">
+                  <span className="font-bold text-sm text-slate-200">AC</span>
+                  <span className="absolute -bottom-1 -right-1 size-3.5 rounded-full bg-emerald-500 border-2 border-slate-900" />
                 </div>
-                <span className="mt-2 text-[10px] font-mono font-semibold text-emerald-400">
-                  [Primary Face Verified · 99.8%]
+                <span className="mt-2 text-[10px] font-mono font-bold text-emerald-400">
+                  [Alex Chen · Primary Face Verified]
                 </span>
-                <span className="text-[10px] text-slate-400">
-                  Audio Speech Energy: Normal
-                </span>
+                <div className="mt-1 flex items-center gap-1.5 text-[10px] text-slate-400 font-mono">
+                  <span>Audio:</span>
+                  <div className="flex items-center gap-0.5 h-3">
+                    <span className="w-0.5 rounded-full bg-emerald-400 soundwave-1" />
+                    <span className="w-0.5 rounded-full bg-emerald-400 soundwave-2" />
+                    <span className="w-0.5 rounded-full bg-emerald-400 soundwave-3" />
+                    <span className="w-0.5 rounded-full bg-emerald-400 soundwave-4" />
+                    <span className="w-0.5 rounded-full bg-emerald-400 soundwave-5" />
+                  </div>
+                </div>
               </div>
 
               {/* Floating AI Proctoring Telemetry Badges */}

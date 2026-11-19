@@ -10,6 +10,8 @@ import {
   Cpu,
   Eye,
   FileText,
+  Globe2,
+  Layers,
   Lock,
   ScanSearch,
   ShieldCheck,
@@ -100,6 +102,13 @@ const QUICK_LAUNCH_ITEMS = [
     icon: Trophy,
   },
 ];
+
+const TRACK_ICONS: Record<string, React.ElementType> = {
+  "Frontend & UI": Globe2,
+  "Backend & Systems": Cpu,
+  "DevOps & Cloud": Layers,
+  "Computer Science": Code2,
+};
 
 const ANTI_CHEAT_LAYERS = [
   {
@@ -231,11 +240,12 @@ export default function HomePage() {
           {/* =========================================================================
               QUICK LAUNCH DOCK
               ========================================================================= */}
-          <div className="border-t border-border bg-card/60 backdrop-blur-md">
-            <div className="container py-4">
-              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
-                <span className="shrink-0 text-xs font-bold uppercase tracking-wider text-muted-foreground pr-2 border-r border-border hidden sm:inline">
-                  Quick Access:
+          <div className="border-t border-border bg-muted/20 backdrop-blur-xl">
+            <div className="container py-3.5">
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+                <span className="shrink-0 text-[11px] font-bold uppercase tracking-wider text-muted-foreground pr-3 border-r border-border/80 hidden sm:inline-flex items-center gap-1.5">
+                  <Sparkles className="size-3 text-primary-500" />
+                  Quick Tools:
                 </span>
                 {QUICK_LAUNCH_ITEMS.map((item) => {
                   const Icon = item.icon;
@@ -243,18 +253,18 @@ export default function HomePage() {
                     <Link
                       key={item.title}
                       href={item.href}
-                      className="group flex shrink-0 items-center gap-2.5 rounded-xl border border-border/70 bg-card px-3 py-2 text-xs transition-all hover:-translate-y-0.5 hover:border-primary-500/50 hover:shadow-card"
+                      className="group flex shrink-0 items-center gap-2.5 rounded-2xl border border-border/70 bg-card/90 px-3.5 py-2 text-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-primary-500/50 hover:shadow-card hover:bg-card"
                     >
-                      <span className="flex size-7 items-center justify-center rounded-lg bg-muted text-foreground group-hover:bg-primary-500/10 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                      <span className="flex size-7 items-center justify-center rounded-xl bg-primary-500/10 text-primary-600 dark:text-primary-400 group-hover:bg-primary-500 group-hover:text-white transition-all">
                         <Icon className="size-3.5" />
                       </span>
                       <div className="text-left">
                         <div className="flex items-center gap-1.5">
-                          <span className="font-semibold text-foreground group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                          <span className="font-bold text-foreground group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                             {item.title}
                           </span>
                           <span className="text-[10px] font-mono text-muted-foreground">
-                            [{item.badge}]
+                            {item.badge}
                           </span>
                         </div>
                         <p className="text-[10px] text-muted-foreground">{item.desc}</p>
@@ -447,22 +457,39 @@ export default function HomePage() {
             />
 
             <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              {LANDING_TRACKS.map((track) => (
-                <div
-                  key={track.category}
-                  className="rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:border-primary-500/40 hover:shadow-card"
-                >
-                  <h3 className="text-sm font-bold text-foreground">{track.category}</h3>
-                  <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{track.description}</p>
-                  <div className="mt-4 flex flex-wrap gap-1.5">
-                    {track.items.map((item) => (
-                      <Badge key={item} tone="gray" size="sm">
-                        {item}
-                      </Badge>
-                    ))}
+              {LANDING_TRACKS.map((track) => {
+                const TrackIcon = TRACK_ICONS[track.category] ?? Code2;
+                return (
+                  <div
+                    key={track.category}
+                    className="group rounded-3xl border border-border/80 bg-card p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary-500/40 hover:shadow-pop"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="flex size-10 items-center justify-center rounded-xl bg-primary-500/10 text-primary-600 dark:text-primary-400 transition-colors group-hover:bg-primary-500/20">
+                        <TrackIcon className="size-5" />
+                      </span>
+                    </div>
+
+                    <h3 className="mt-4 text-base font-bold text-foreground group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                      {track.category}
+                    </h3>
+                    <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed">
+                      {track.description}
+                    </p>
+
+                    <div className="mt-4 flex flex-wrap gap-1.5 border-t border-border/60 pt-3.5">
+                      {track.items.map((item) => (
+                        <span
+                          key={item}
+                          className="rounded-lg bg-muted/60 px-2.5 py-1 text-[11px] font-mono text-muted-foreground border border-border/60"
+                        >
+                          {item}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="mt-10 flex flex-wrap justify-center gap-3">
