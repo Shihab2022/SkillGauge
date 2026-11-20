@@ -483,6 +483,8 @@ export function useInterviewProctor(options: Options) {
   // Release the devices whenever the runner unmounts.
   useEffect(() => stop, [stop]);
 
+  const getAnalyser = useCallback(() => analyserRef.current, []);
+
   return {
     videoRef,
     cameraStatus,
@@ -500,5 +502,6 @@ export function useInterviewProctor(options: Options) {
     getTelemetry,
     resetTelemetry,
     getStream,
+    getAnalyser,
   };
 }
