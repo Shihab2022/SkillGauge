@@ -40,6 +40,7 @@ import { NotificationRouter } from "../modules/notifications/notifications.route
 import { DashboardRouter } from "../modules/dashboard/dashboard.routes";
 import { InterviewRouter, InterviewSessionRouter } from "../modules/interviews/interviews.routes";
 import { ResumeRouter } from "../modules/resumes/resume.routes";
+import { JobRouter } from "../modules/jobs/jobs.routes";
 import swaggerUi from "swagger-ui-express";
 import { swaggerDocument } from "../docs/swagger";
 
@@ -118,6 +119,9 @@ router.use("/interview-sessions", InterviewSessionRouter);
 
 // Resumes + ATS analyzer: /api/v1/resumes
 router.use("/resumes", ResumeRouter);
+
+// Jobs & Applications (Ashby style): /api/v1/jobs
+router.use("/jobs", JobRouter);
 
 // Swagger docs: /api/docs
 router.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));

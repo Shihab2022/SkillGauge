@@ -201,6 +201,23 @@ export const endpoints = {
     dashboardStats: "/admin/dashboard-stats",
     auditLogs: "/admin/audit-logs",
   },
+
+  jobs: {
+    listPublic: "/jobs",
+    companyCareer: (companySlug: string) => `/jobs/company/${companySlug}`,
+    publicJob: (idOrSlug: string) => `/jobs/posting/${idOrSlug}`,
+    apply: (idOrSlug: string) => `/jobs/posting/${idOrSlug}/apply`,
+    candidateApplications: "/jobs/candidate/my-applications",
+    recruiterMine: "/jobs/manage/mine",
+    recruiterCreate: "/jobs/manage",
+    recruiterById: (id: string) => `/jobs/manage/${id}`,
+    recruiterApplications: (jobId: string) => `/jobs/manage/${jobId}/applications`,
+    recruiterAllApplications: "/jobs/manage/applications",
+    recruiterApplication: (applicationId: string) => `/jobs/manage/applications/${applicationId}`,
+    recruiterUpdateStatus: (applicationId: string) => `/jobs/manage/applications/${applicationId}/status`,
+    recruiterInviteAssessment: (applicationId: string) => `/jobs/manage/applications/${applicationId}/invite-assessment`,
+    recruiterInviteInterview: (applicationId: string) => `/jobs/manage/applications/${applicationId}/invite-interview`,
+  },
 } as const;
 
 export default endpoints;

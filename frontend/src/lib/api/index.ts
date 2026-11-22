@@ -18,5 +18,6 @@ export { dashboardApi } from "./dashboard";
 export { adminApi } from "./admin";
 export { interviewsApi, interviewSessionApi } from "./interviews";
 export { resumesApi } from "./resumes";
+export { jobsApi, type JobListParams } from "./jobs";
 
 export type * from "./payloads";

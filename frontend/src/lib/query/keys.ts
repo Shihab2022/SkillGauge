@@ -111,4 +111,16 @@ export const qk = {
     payments: (params?: unknown) => ["admin", "payments", params ?? {}] as const,
     auditLogs: (params?: unknown) => ["admin", "audit-logs", params ?? {}] as const,
   },
+  jobs: {
+    all: ["jobs"] as const,
+    listPublic: (params?: unknown) => ["jobs", "public", params ?? {}] as const,
+    companyCareer: (slug: string) => ["jobs", "company", slug] as const,
+    publicJob: (idOrSlug: string, company?: string) => ["jobs", "detail", idOrSlug, company ?? ""] as const,
+    candidateApplications: ["jobs", "candidate-applications"] as const,
+    recruiterMine: (params?: unknown) => ["jobs", "recruiter-mine", params ?? {}] as const,
+    recruiterDetail: (id: string) => ["jobs", "recruiter-detail", id] as const,
+    recruiterApplications: (id: string, params?: unknown) => ["jobs", "recruiter-applications", id, params ?? {}] as const,
+    recruiterAllApplications: (params?: unknown) => ["jobs", "recruiter-all-applications", params ?? {}] as const,
+    recruiterApplication: (id: string) => ["jobs", "recruiter-application-detail", id] as const,
+  },
 } as const;

@@ -253,6 +253,62 @@ export const RISK_LEVEL_LABELS: Record<string, string> = {
   HIGH: "High risk",
 };
 
+/* ------------------------------------------------------------------ jobs */
+
+export const JOB_WORKPLACE_TYPES = ["REMOTE", "HYBRID", "ON_SITE"] as const;
+export const JOB_EMPLOYMENT_TYPES = ["FULL_TIME", "PART_TIME", "CONTRACT", "INTERNSHIP"] as const;
+export const JOB_SENIORITIES = ["ENTRY", "MID", "SENIOR", "LEAD", "EXECUTIVE"] as const;
+export const JOB_POSTING_STATUSES = ["DRAFT", "PUBLISHED", "CLOSED", "ARCHIVED"] as const;
+export const JOB_APPLICATION_STATUSES = [
+  "APPLIED",
+  "SCREENING",
+  "SHORTLISTED",
+  "INTERVIEWING",
+  "OFFERED",
+  "REJECTED",
+  "HIRED",
+  "WITHDRAWN",
+] as const;
+
+export const JOB_WORKPLACE_TYPE_LABELS: Record<string, string> = {
+  REMOTE: "Remote",
+  HYBRID: "Hybrid",
+  ON_SITE: "On-site",
+};
+
+export const JOB_EMPLOYMENT_TYPE_LABELS: Record<string, string> = {
+  FULL_TIME: "Full-time",
+  PART_TIME: "Part-time",
+  CONTRACT: "Contract",
+  INTERNSHIP: "Internship",
+};
+
+export const JOB_SENIORITY_LABELS: Record<string, string> = {
+  ENTRY: "Entry level",
+  MID: "Mid level",
+  SENIOR: "Senior",
+  LEAD: "Lead / Staff",
+  EXECUTIVE: "Executive",
+};
+
+export const JOB_POSTING_STATUS_LABELS: Record<string, string> = {
+  DRAFT: "Draft",
+  PUBLISHED: "Published",
+  CLOSED: "Closed",
+  ARCHIVED: "Archived",
+};
+
+export const JOB_APPLICATION_STATUS_LABELS: Record<string, string> = {
+  APPLIED: "Applied",
+  SCREENING: "Screening",
+  SHORTLISTED: "Shortlisted",
+  INTERVIEWING: "Interviewing",
+  OFFERED: "Offer Extended",
+  REJECTED: "Not Moving Forward",
+  HIRED: "Hired",
+  WITHDRAWN: "Withdrawn",
+};
+
 /* ------------------------------------------------------- badge tone mapping */
 
 export type BadgeTone =
@@ -458,6 +514,7 @@ export interface NavItem {
 
 export const RECRUITER_NAV: NavItem[] = [
   { href: "/recruiter/dashboard", label: "Dashboard", icon: "LayoutDashboard" },
+  { href: "/recruiter/jobs", label: "Job Openings", icon: "Briefcase" },
   { href: "/recruiter/assessments", label: "Assessments", icon: "ClipboardList" },
   { href: "/recruiter/interviews", label: "AI interviews", icon: "Video" },
   { href: "/recruiter/competitions", label: "Competitions", icon: "Trophy" },
@@ -491,6 +548,7 @@ export const COMPANY_OWNER_EXTRA_NAV: NavItem[] = [
 
 export const CANDIDATE_NAV: NavItem[] = [
   { href: "/candidate/dashboard", label: "Dashboard", icon: "LayoutDashboard" },
+  { href: "/candidate/applications", label: "My Applications", icon: "Briefcase" },
   {
     href: "/candidate/invitations",
     label: "Invitations",

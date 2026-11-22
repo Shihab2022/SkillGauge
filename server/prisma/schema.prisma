@@ -229,6 +229,45 @@ enum InterviewDecision {
   NO_HIRE
 }
 
+enum JobWorkplaceType {
+  REMOTE
+  HYBRID
+  ON_SITE
+}
+
+enum JobEmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+}
+
+enum JobSeniority {
+  ENTRY
+  MID
+  SENIOR
+  LEAD
+  EXECUTIVE
+}
+
+enum JobPostingStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+  ARCHIVED
+}
+
+enum JobApplicationStatus {
+  APPLIED
+  SCREENING
+  SHORTLISTED
+  INTERVIEWING
+  OFFERED
+  REJECTED
+  HIRED
+  WITHDRAWN
+}
+
 // ----------------------------- Models -----------------------------
 
 model User {
@@ -278,6 +317,8 @@ model User {
   resumes          Resume[]
   jobDescriptions  JobDescription[]
   resumeAnalyses   ResumeAnalysis[]
+  createdJobPostings JobPosting[]       @relation("JobPostingCreator")
+  jobApplications    JobApplication[]   @relation("CandidateApplications")
 
   @@index([role])
   @@index([status])
@@ -342,6 +383,7 @@ model Company {
   templates          AssessmentTemplate[]
   candidateNotes     CandidateNote[]
   interviews         Interview[]
+  jobPostings        JobPosting[]
 
   @@index([name])
 }
@@ -478,6 +520,7 @@ model Assessment {
   results     Result[]
   template    AssessmentTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
   candidateNotes CandidateNote[]
+  jobPostings JobPosting[]
 
   @@index([companyId])
   @@index([createdBy])
@@ -893,6 +936,7 @@ model Interview {
 
   questions InterviewQuestion[]
   sessions  InterviewSession[]
+  jobPostings JobPosting[]
 
   @@index([companyId])
   @@index([status])
@@ -1171,4 +1215,97 @@ model ResumeAnalysis {
   @@index([resumeId])
   @@index([status])
 }
+
+// ----------------------------- Job Board & Application Models -----------------------------
+
+model JobPosting {
+  id              String             @id @default(uuid())
+  companyId       String
+  company         Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  creatorId       String
+  creator         User               @relation("JobPostingCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  title           String
+  slug            String
+  department      String             @default("Engineering")
+  location        String             @default("Remote")
+  workplaceType   JobWorkplaceType   @default(REMOTE)
+  employmentType  JobEmploymentType  @default(FULL_TIME)
+  seniority       JobSeniority       @default(MID)
+  
+  salaryCurrency  String             @default("USD")
+  salaryMin       Int?
+  salaryMax       Int?
+  salaryInterval  String             @default("YEARLY")
+  equityBonus     String?
+
+  overview        String?
+  description     String
+  requirements    String?
+  customQuestions Json?              @default("[]")
+
+  assessmentId    String?
+  assessment      Assessment?        @relation(fields: [assessmentId], references: [id], onDelete: SetNull)
+  interviewId     String?
+  interview       Interview?         @relation(fields: [interviewId], references: [id], onDelete: SetNull)
+
+  status          JobPostingStatus   @default(PUBLISHED)
+  viewCount       Int                @default(0)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  deletedAt       DateTime?
+
+  applications    JobApplication[]
+
+  @@unique([companyId, slug])
+  @@index([companyId])
+  @@index([status])
+  @@index([workplaceType])
+  @@index([employmentType])
+  @@index([department])
+  @@index([createdAt])
+}
+
+model JobApplication {
+  id              String               @id @default(uuid())
+  jobPostingId    String
+  jobPosting      JobPosting           @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+  
+  candidateId     String?
+  candidate       User?                @relation("CandidateApplications", fields: [candidateId], references: [id], onDelete: SetNull)
+
+  fullName        String
+  email           String
+  phone           String?
+  location        String?
+  currentCompany  String?
+  currentTitle    String?
+  
+  linkedinUrl     String?
+  githubUrl       String?
+  portfolioUrl    String?
+
+  resumeUrl       String?
+  resumeFileName  String?
+  resumeText      String?
+  resumeData      String?
+  resumeSourceId  String?
+  coverLetter     String?
+
+  answers         Json?                @default("[]")
+
+  status          JobApplicationStatus @default(APPLIED)
+  notes           String?
+  rating          Int?
+
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  deletedAt       DateTime?
+
+  @@index([jobPostingId])
+  @@index([candidateId])
+  @@index([email])
+  @@index([status])
+  @@index([createdAt])
+}
+
 
