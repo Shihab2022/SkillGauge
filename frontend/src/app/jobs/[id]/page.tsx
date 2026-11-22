@@ -664,20 +664,30 @@ export default function AshbyJobDetailsPage() {
                     )}
                   </div>
 
-                  {/* Custom Screening Questions (if defined by recruiter) */}
+                  {/* Custom Screening Questions (Configured by Recruiter) */}
                   {job.customQuestions && job.customQuestions.length > 0 && (
                     <div className="space-y-4 pt-4 border-t border-border">
-                      <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                        Additional Questions
-                      </h3>
+                      <div>
+                        <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                          Additional Information
+                        </h3>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Specific questions requested by the hiring team for this role.
+                        </p>
+                      </div>
 
                       <div className="space-y-4">
                         {job.customQuestions.map((q) => (
-                          <div key={q.id}>
-                            <label className="block text-xs font-medium text-foreground mb-1.5">
+                          <div key={q.id} className="space-y-1.5">
+                            <label className="block text-xs font-semibold text-foreground">
                               {q.question}{" "}
                               {q.required && <span className="text-rose-500">*</span>}
                             </label>
+                            {q.description && (
+                              <p className="text-[11px] text-muted-foreground">
+                                {q.description}
+                              </p>
+                            )}
 
                             {q.type === "textarea" ? (
                               <textarea
@@ -690,7 +700,7 @@ export default function AshbyJobDetailsPage() {
                                     [q.id]: e.target.value,
                                   })
                                 }
-                                placeholder="Your answer..."
+                                placeholder={q.placeholder || "Your detailed answer..."}
                                 className="w-full p-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500"
                               />
                             ) : q.type === "select" && q.options ? (
@@ -713,7 +723,7 @@ export default function AshbyJobDetailsPage() {
                                 ))}
                               </select>
                             ) : q.type === "boolean" ? (
-                              <div className="flex items-center gap-4">
+                              <div className="flex items-center gap-4 pt-1">
                                 <label className="inline-flex items-center gap-2 text-sm text-foreground cursor-pointer">
                                   <input
                                     type="radio"
@@ -726,6 +736,7 @@ export default function AshbyJobDetailsPage() {
                                         [q.id]: "Yes",
                                       })
                                     }
+                                    className="text-primary-600 focus:ring-primary-500"
                                   />
                                   Yes
                                 </label>
@@ -741,13 +752,59 @@ export default function AshbyJobDetailsPage() {
                                         [q.id]: "No",
                                       })
                                     }
+                                    className="text-primary-600 focus:ring-primary-500"
                                   />
                                   No
                                 </label>
                               </div>
+                            ) : q.type === "file" ? (
+                              <div>
+                                {customAnswers[q.id] ? (
+                                  <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/30 text-xs">
+                                    <span className="font-medium text-foreground truncate max-w-xs">
+                                      {typeof customAnswers[q.id] === "string" && customAnswers[q.id].startsWith("data:")
+                                        ? "File attached"
+                                        : customAnswers[q.id]}
+                                    </span>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() =>
+                                        setCustomAnswers({
+                                          ...customAnswers,
+                                          [q.id]: "",
+                                        })
+                                      }
+                                      className="text-xs text-rose-500 hover:text-rose-600 h-6 px-2"
+                                    >
+                                      Remove
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <input
+                                    type="file"
+                                    required={q.required}
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) {
+                                        const r = new FileReader();
+                                        r.onload = () => {
+                                          setCustomAnswers({
+                                            ...customAnswers,
+                                            [q.id]: r.result as string,
+                                          });
+                                        };
+                                        r.readAsDataURL(file);
+                                      }
+                                    }}
+                                    className="w-full text-xs text-muted-foreground file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
+                                  />
+                                )}
+                              </div>
                             ) : (
                               <input
-                                type={q.type === "number" ? "number" : "text"}
+                                type={q.type === "number" ? "number" : q.type === "url" ? "url" : "text"}
                                 required={q.required}
                                 value={customAnswers[q.id] || ""}
                                 onChange={(e) =>
@@ -756,7 +813,14 @@ export default function AshbyJobDetailsPage() {
                                     [q.id]: e.target.value,
                                   })
                                 }
-                                placeholder="Your answer..."
+                                placeholder={
+                                  q.placeholder ||
+                                  (q.type === "url"
+                                    ? "https://..."
+                                    : q.type === "number"
+                                    ? "e.g. 5"
+                                    : "Your answer...")
+                                }
                                 className="w-full h-10 px-3.5 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500"
                               />
                             )}

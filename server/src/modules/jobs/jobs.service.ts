@@ -82,9 +82,13 @@ async function createJobPosting(user: IAuthUser, data: CreateJobPostingInput) {
   }
 
   // Validate optional assessment
-  if (data.assessmentId) {
+  const cleanAssessmentId =
+    data.assessmentId && typeof data.assessmentId === "string" && data.assessmentId.trim()
+      ? data.assessmentId.trim()
+      : null;
+  if (cleanAssessmentId) {
     const assessment = await prisma.assessment.findFirst({
-      where: { id: data.assessmentId, companyId, deletedAt: null },
+      where: { id: cleanAssessmentId, companyId, deletedAt: null },
     });
     if (!assessment) {
       throw new ApiError(
@@ -95,9 +99,13 @@ async function createJobPosting(user: IAuthUser, data: CreateJobPostingInput) {
   }
 
   // Validate optional interview
-  if (data.interviewId) {
+  const cleanInterviewId =
+    data.interviewId && typeof data.interviewId === "string" && data.interviewId.trim()
+      ? data.interviewId.trim()
+      : null;
+  if (cleanInterviewId) {
     const interview = await prisma.interview.findFirst({
-      where: { id: data.interviewId, companyId, deletedAt: null },
+      where: { id: cleanInterviewId, companyId, deletedAt: null },
     });
     if (!interview) {
       throw new ApiError(
@@ -127,8 +135,8 @@ async function createJobPosting(user: IAuthUser, data: CreateJobPostingInput) {
       description: data.description,
       requirements: data.requirements ?? null,
       customQuestions: data.customQuestions || [],
-      assessmentId: data.assessmentId ?? null,
-      interviewId: data.interviewId ?? null,
+      assessmentId: cleanAssessmentId,
+      interviewId: cleanInterviewId,
       status: data.status || "PUBLISHED",
     },
     include: {
@@ -166,9 +174,15 @@ async function updateJobPosting(
     throw new ApiError(httpStatus.NOT_FOUND, "Job posting not found");
   }
 
-  if (data.assessmentId) {
+  const cleanAssessmentId =
+    data.assessmentId !== undefined
+      ? data.assessmentId && typeof data.assessmentId === "string" && data.assessmentId.trim()
+        ? data.assessmentId.trim()
+        : null
+      : undefined;
+  if (cleanAssessmentId) {
     const assessment = await prisma.assessment.findFirst({
-      where: { id: data.assessmentId, companyId, deletedAt: null },
+      where: { id: cleanAssessmentId, companyId, deletedAt: null },
     });
     if (!assessment) {
       throw new ApiError(
@@ -178,9 +192,15 @@ async function updateJobPosting(
     }
   }
 
-  if (data.interviewId) {
+  const cleanInterviewId =
+    data.interviewId !== undefined
+      ? data.interviewId && typeof data.interviewId === "string" && data.interviewId.trim()
+        ? data.interviewId.trim()
+        : null
+      : undefined;
+  if (cleanInterviewId) {
     const interview = await prisma.interview.findFirst({
-      where: { id: data.interviewId, companyId, deletedAt: null },
+      where: { id: cleanInterviewId, companyId, deletedAt: null },
     });
     if (!interview) {
       throw new ApiError(
@@ -220,10 +240,10 @@ async function updateJobPosting(
       ...(data.customQuestions !== undefined && {
         customQuestions: data.customQuestions,
       }),
-      ...(data.assessmentId !== undefined && {
-        assessmentId: data.assessmentId,
+      ...(cleanAssessmentId !== undefined && {
+        assessmentId: cleanAssessmentId,
       }),
-      ...(data.interviewId !== undefined && { interviewId: data.interviewId }),
+      ...(cleanInterviewId !== undefined && { interviewId: cleanInterviewId }),
       ...(data.status !== undefined && { status: data.status }),
     },
     include: {

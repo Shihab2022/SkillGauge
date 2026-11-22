@@ -6,8 +6,6 @@ import { useParams, useRouter } from "next/navigation";
 import {
   Briefcase,
   ArrowLeft,
-  Plus,
-  Trash2,
   DollarSign,
   Video,
   ClipboardList,
@@ -18,6 +16,7 @@ import { useCompanyJobPosting, useUpdateJobPosting } from "@/hooks/useJobs";
 import { useAssessments } from "@/hooks/useAssessments";
 import { useInterviews } from "@/hooks/useInterviews";
 import { Button } from "@/components/ui/Button";
+import { CustomFieldBuilder } from "@/components/recruiter/CustomFieldBuilder";
 import type {
   JobWorkplaceType,
   JobEmploymentType,
@@ -85,28 +84,6 @@ export default function EditJobPostingPage() {
     }
   }, [job]);
 
-  const addCustomQuestion = () => {
-    setCustomQuestions([
-      ...customQuestions,
-      {
-        id: `q_${Date.now()}`,
-        question: "",
-        type: "text",
-        required: false,
-      },
-    ]);
-  };
-
-  const removeCustomQuestion = (index: number) => {
-    setCustomQuestions(customQuestions.filter((_, i) => i !== index));
-  };
-
-  const updateQuestion = (index: number, updates: Partial<CustomQuestion>) => {
-    const updated = [...customQuestions];
-    updated[index] = { ...updated[index]!, ...updates };
-    setCustomQuestions(updated);
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -142,7 +119,8 @@ export default function EditJobPostingPage() {
       },
       {
         onSuccess: () => {
-          router.push(`/recruiter/jobs/${id}/applications`);
+          toast.success("Job posting updated successfully!");
+          router.push(`/recruiter/jobs/${id}`);
         },
       },
     );
@@ -395,84 +373,12 @@ export default function EditJobPostingPage() {
           </div>
         </div>
 
-        {/* Section 4: Screening Questions */}
-        <div className="bg-card border border-border rounded-xl p-6 space-y-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-bold text-foreground">
-                Screening Questions
-              </h2>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Questions asked to candidates during Ashby application.
-              </p>
-            </div>
-
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={addCustomQuestion}
-              className="gap-1 text-xs"
-            >
-              <Plus className="w-3.5 h-3.5" /> Add Question
-            </Button>
-          </div>
-
-          <div className="space-y-3 pt-2">
-            {customQuestions.map((q, idx) => (
-              <div
-                key={q.id}
-                className="p-4 rounded-xl border border-border bg-muted/20 flex flex-col sm:flex-row items-start sm:items-center gap-3"
-              >
-                <div className="flex-1 w-full space-y-2">
-                  <input
-                    type="text"
-                    required
-                    value={q.question}
-                    onChange={(e) => updateQuestion(idx, { question: e.target.value })}
-                    className="w-full h-9 px-3 rounded-lg border border-border bg-background text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  />
-
-                  <div className="flex items-center gap-4 text-xs">
-                    <select
-                      value={q.type}
-                      onChange={(e) =>
-                        updateQuestion(idx, {
-                          type: e.target.value as any,
-                        })
-                      }
-                      className="h-8 px-2.5 rounded-lg border border-border bg-background text-xs text-foreground focus:outline-none"
-                    >
-                      <option value="text">Short Text</option>
-                      <option value="textarea">Long Answer</option>
-                      <option value="boolean">Yes / No</option>
-                      <option value="number">Numeric</option>
-                    </select>
-
-                    <label className="flex items-center gap-1.5 cursor-pointer text-muted-foreground hover:text-foreground">
-                      <input
-                        type="checkbox"
-                        checked={q.required || false}
-                        onChange={(e) => updateQuestion(idx, { required: e.target.checked })}
-                        className="rounded border-border text-primary-600 focus:ring-primary-500"
-                      />
-                      Required
-                    </label>
-                  </div>
-                </div>
-
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeCustomQuestion(idx)}
-                  className="text-muted-foreground hover:text-rose-600 self-end sm:self-center"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            ))}
-          </div>
+        {/* Section 4: Application Input Fields Builder (Controlled by Admin) */}
+        <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+          <CustomFieldBuilder
+            questions={customQuestions}
+            onChange={setCustomQuestions}
+          />
         </div>
 
         {/* Section 5: SkillGauge Integrations */}

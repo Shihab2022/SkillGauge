@@ -19,8 +19,17 @@ export type JobApplicationStatus =
 export interface CustomQuestion {
   id: string;
   question: string;
-  type: "text" | "textarea" | "select" | "radio" | "boolean" | "number";
+  type:
+    | "text"
+    | "textarea"
+    | "select"
+    | "radio"
+    | "boolean"
+    | "number"
+    | "file"
+    | "url";
   required?: boolean;
+  placeholder?: string;
   options?: string[];
   description?: string;
 }

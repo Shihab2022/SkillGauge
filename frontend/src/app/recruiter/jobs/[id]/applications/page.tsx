@@ -455,17 +455,46 @@ export default function JobApplicationsATSPage() {
             {selectedApp.answers && selectedApp.answers.length > 0 && (
               <div className="space-y-3 pt-3 border-t border-border">
                 <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Screening Questions & Answers
+                  Custom Questions & Responses ({selectedApp.answers.length})
                 </h4>
                 <div className="space-y-2.5">
-                  {selectedApp.answers.map((ans, i) => (
-                    <div key={i} className="bg-card p-3 rounded-lg border border-border text-xs">
-                      <p className="font-medium text-foreground">{ans.question}</p>
-                      <p className="text-muted-foreground mt-1 bg-muted/40 p-2 rounded">
-                        {ans.answer ? String(ans.answer) : "No answer provided"}
-                      </p>
-                    </div>
-                  ))}
+                  {selectedApp.answers.map((ans, i) => {
+                    const ansStr = ans.answer ? String(ans.answer).trim() : "";
+                    const isUrl = ansStr.startsWith("http://") || ansStr.startsWith("https://");
+                    const isFileData = ansStr.startsWith("data:");
+
+                    return (
+                      <div key={i} className="bg-card p-3 rounded-lg border border-border text-xs space-y-1">
+                        <p className="font-semibold text-foreground">{ans.question}</p>
+                        <div className="text-muted-foreground bg-muted/40 p-2 rounded">
+                          {!ansStr ? (
+                            <span className="italic text-muted-foreground/60">No answer provided</span>
+                          ) : isUrl ? (
+                            <a
+                              href={ansStr}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-primary-600 hover:underline inline-flex items-center gap-1 font-medium break-all"
+                            >
+                              {ansStr} <ExternalLink className="w-3 h-3 shrink-0" />
+                            </a>
+                          ) : isFileData ? (
+                            <a
+                              href={ansStr}
+                              download={`attachment_${i + 1}`}
+                              className="text-primary-600 hover:underline inline-flex items-center gap-1 font-medium"
+                            >
+                              <Download className="w-3.5 h-3.5" /> Download Attached File
+                            </a>
+                          ) : (
+                            <span className="whitespace-pre-line text-foreground/90 font-medium">
+                              {ansStr}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

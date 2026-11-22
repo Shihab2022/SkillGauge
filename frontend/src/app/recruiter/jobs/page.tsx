@@ -171,7 +171,7 @@ export default function RecruiterJobsListPage() {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2.5">
                     <Link
-                      href={`/recruiter/jobs/${job.id}/applications`}
+                      href={`/recruiter/jobs/${job.id}`}
                       className="text-base font-bold text-foreground hover:text-primary-600 transition-colors"
                     >
                       {job.title}

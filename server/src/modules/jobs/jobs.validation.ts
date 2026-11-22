@@ -33,16 +33,26 @@ export const JobApplicationStatusEnum = z.enum([
 
 export const customQuestionSchema = z.object({
   id: z.string(),
-  question: z.string().min(3),
-  type: z.enum(["text", "textarea", "select", "radio", "boolean", "number"]),
+  question: z.string().min(1, "Field label / question is required"),
+  type: z.enum([
+    "text",
+    "textarea",
+    "select",
+    "radio",
+    "boolean",
+    "number",
+    "file",
+    "url",
+  ]).default("text"),
   required: z.boolean().default(false),
-  options: z.array(z.string()).optional(),
-  description: z.string().optional(),
+  placeholder: z.string().optional().nullable(),
+  options: z.array(z.string()).optional().nullable(),
+  description: z.string().optional().nullable(),
 });
 
 export const createJobPostingSchema = z.object({
   body: z.object({
-    title: z.string().min(3, "Title must be at least 3 characters").max(200),
+    title: z.string().min(2, "Title must be at least 2 characters").max(200),
     department: z.string().min(1).max(100).default("Engineering"),
     location: z.string().min(1).max(150).default("Remote"),
     workplaceType: JobWorkplaceTypeEnum.default("REMOTE"),
@@ -54,18 +64,18 @@ export const createJobPostingSchema = z.object({
     salaryInterval: z.string().default("YEARLY"),
     equityBonus: z.string().max(200).nullable().optional(),
     overview: z.string().max(2000).nullable().optional(),
-    description: z.string().min(20, "Job description must be at least 20 characters"),
+    description: z.string().min(10, "Job description must be at least 10 characters"),
     requirements: z.string().nullable().optional(),
     customQuestions: z.array(customQuestionSchema).optional().default([]),
-    assessmentId: z.string().uuid().nullable().optional(),
-    interviewId: z.string().uuid().nullable().optional(),
+    assessmentId: z.string().uuid().nullable().optional().or(z.literal("")),
+    interviewId: z.string().uuid().nullable().optional().or(z.literal("")),
     status: JobPostingStatusEnum.default("PUBLISHED"),
   }),
 });
 
 export const updateJobPostingSchema = z.object({
   body: z.object({
-    title: z.string().min(3).max(200).optional(),
+    title: z.string().min(2).max(200).optional(),
     department: z.string().min(1).max(100).optional(),
     location: z.string().min(1).max(150).optional(),
     workplaceType: JobWorkplaceTypeEnum.optional(),
@@ -77,11 +87,11 @@ export const updateJobPostingSchema = z.object({
     salaryInterval: z.string().optional(),
     equityBonus: z.string().max(200).nullable().optional(),
     overview: z.string().max(2000).nullable().optional(),
-    description: z.string().min(20).optional(),
+    description: z.string().min(10).optional(),
     requirements: z.string().nullable().optional(),
     customQuestions: z.array(customQuestionSchema).optional(),
-    assessmentId: z.string().uuid().nullable().optional(),
-    interviewId: z.string().uuid().nullable().optional(),
+    assessmentId: z.string().uuid().nullable().optional().or(z.literal("")),
+    interviewId: z.string().uuid().nullable().optional().or(z.literal("")),
     status: JobPostingStatusEnum.optional(),
   }),
 });
