@@ -22,6 +22,7 @@ export interface LandingNavLink {
  * Primary header navigation with direct real routes.
  */
 export const LANDING_NAV: LandingNavLink[] = [
+  { href: "/jobs", label: "Job Openings", badge: "Live" },
   { href: "/practice", label: "Practice Arena" },
   { href: "/playground", label: "Compiler" },
   { href: "/exams", label: "Exams" },
@@ -33,7 +34,6 @@ export const LANDING_NAV: LandingNavLink[] = [
  * Secondary routes / links shown in header navigation.
  */
 export const HEADER_ROUTE_LINKS: LandingNavLink[] = [
-  { href: "#ai-interviews", label: "AI Interviews", badge: "AI" },
   { href: "/register/company", label: "For Teams" },
 ];
 
@@ -571,6 +571,7 @@ export const LANDING_FOOTER_GROUPS: LandingFooterGroup[] = [
   {
     title: "Developers & Learners (B2C)",
     links: [
+      { label: "Verified Tech Jobs (Ashby ATS)", href: "/jobs" },
       { label: "Practice Arena (1,000+ Problems)", href: "/practice" },
       { label: "10-Language Online Compiler", href: "/playground" },
       { label: "Technology Certification Exams", href: "/exams" },
@@ -583,9 +584,10 @@ export const LANDING_FOOTER_GROUPS: LandingFooterGroup[] = [
   {
     title: "Enterprise & Recruiters (B2B)",
     links: [
-      { label: "Proctored AI Video Interviews", href: "/recruiter/interviews" },
+      { label: "Post a Job (Recruiter ATS)", href: "/recruiter/jobs/new" },
+      { label: "Proctored AI Video Interviews", href: "/register/company" },
       { label: "Assessment Builder & Question Bank", href: "/register/company" },
-      { label: "Candidate Pipeline & Analytics", href: "/recruiter/candidates" },
+      { label: "Candidate Pipeline & Analytics", href: "/register/company" },
       { label: "Anti-Cheating Telemetry", href: "/register/company" },
       { label: "Create Company Workspace", href: "/register/company" },
       { label: "Recruiter Join with Code", href: "/register/recruiter" },

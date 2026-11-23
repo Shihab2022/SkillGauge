@@ -5,10 +5,14 @@ import Link from "next/link";
 import {
   ArrowRight,
   Bot,
+  Briefcase,
   Camera,
   CheckCircle2,
   Code2,
+  DollarSign,
   FileText,
+  ListPlus,
+  MapPin,
   Mic,
   ScanSearch,
   ShieldCheck,
@@ -18,12 +22,14 @@ import {
 import { CodePreviewPanel } from "@/components/marketing/CodePreviewPanel";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { JobDescriptionRenderer } from "@/components/jobs/JobDescriptionRenderer";
 import { cn } from "@/lib/utils";
 
-type ShowcaseTab = "code" | "interview" | "resume";
+type ShowcaseTab = "code" | "jobs" | "interview" | "resume";
 
 export function HeroShowcase() {
   const [activeTab, setActiveTab] = useState<ShowcaseTab>("code");
+  const [jobInnerTab, setJobInnerTab] = useState<"desc" | "fields">("desc");
 
   return (
     <div className="relative mx-auto w-full max-w-2xl overflow-hidden rounded-2xl border border-border/70 bg-card/95 shadow-pop backdrop-blur-xl transition-all">
@@ -42,6 +48,23 @@ export function HeroShowcase() {
           >
             <Code2 className="size-3.5" />
             <span>Code Sandbox</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("jobs")}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all",
+              activeTab === "jobs"
+                ? "bg-primary-600 text-white shadow-sm"
+                : "text-muted-foreground hover:bg-card hover:text-foreground",
+            )}
+          >
+            <Briefcase className="size-3.5" />
+            <span>Job Openings</span>
+            <span className="rounded bg-emerald-500/15 px-1 py-0.2 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+              Ashby
+            </span>
           </button>
 
           <button
@@ -96,6 +119,112 @@ export function HeroShowcase() {
               Open Full Compiler
               <ArrowRight className="size-3" />
             </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Tab: Ashby ATS Job Post Showcase */}
+      {activeTab === "jobs" && (
+        <div className="animate-fade-in p-4 space-y-3.5">
+          {/* Header Card */}
+          <div className="rounded-xl border border-border bg-muted/30 p-3.5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/80 pb-3">
+              <div>
+                <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                  <span className="font-semibold text-primary-600 dark:text-primary-400">SkillGauge Core</span>
+                  <span>•</span>
+                  <span>Engineering</span>
+                  <span>•</span>
+                  <span>Remote (Worldwide)</span>
+                </div>
+                <h4 className="text-sm sm:text-base font-bold text-foreground mt-0.5">
+                  Senior Full-Stack Engineer
+                </h4>
+              </div>
+              <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
+                <DollarSign className="size-3" />
+                $140k - $185k / yr
+              </span>
+            </div>
+
+            {/* Inner Tabs: Job Description vs Application Form */}
+            <div className="flex items-center gap-2 pt-2.5 pb-2">
+              <button
+                type="button"
+                onClick={() => setJobInnerTab("desc")}
+                className={cn(
+                  "px-2.5 py-1 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5",
+                  jobInnerTab === "desc"
+                    ? "bg-primary-600 text-white shadow-xs"
+                    : "text-muted-foreground hover:bg-card hover:text-foreground"
+                )}
+              >
+                <FileText className="size-3" />
+                <span>Job Description</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setJobInnerTab("fields")}
+                className={cn(
+                  "px-2.5 py-1 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5",
+                  jobInnerTab === "fields"
+                    ? "bg-primary-600 text-white shadow-xs"
+                    : "text-muted-foreground hover:bg-card hover:text-foreground"
+                )}
+              >
+                <ListPlus className="size-3" />
+                <span>Application Fields</span>
+                <span className="text-[10px] bg-muted px-1 rounded">3 custom</span>
+              </button>
+            </div>
+
+            {jobInnerTab === "desc" ? (
+              <div className="rounded-lg border border-border/80 bg-background p-3.5 text-xs max-h-[190px] overflow-y-auto space-y-2">
+                <JobDescriptionRenderer
+                  content={`## About the Role
+Design and ship scalable web applications and real-time code sandboxes.
+
+## Responsibilities
+- Architect high-throughput Next.js & Node.js features
+- Optimize database queries and caching latency
+- Participate in technical architecture reviews
+
+## Requirements
+- **3+ years** of modern full-stack development experience
+- Proficiency in **TypeScript, React, PostgreSQL**
+- No title required — we evaluate practical engineering capability`}
+                />
+              </div>
+            ) : (
+              <div className="rounded-lg border border-border/80 bg-background p-3.5 text-xs max-h-[190px] overflow-y-auto space-y-2">
+                <div className="space-y-1.5">
+                  <div className="p-2 rounded border border-border/80 bg-muted/20 flex items-center justify-between text-[11px]">
+                    <span className="font-medium text-foreground">1. Notice Period:</span>
+                    <span className="text-muted-foreground">Select: Immediate, 30, 60 days</span>
+                  </div>
+                  <div className="p-2 rounded border border-border/80 bg-muted/20 flex items-center justify-between text-[11px]">
+                    <span className="font-medium text-foreground">2. Expected Salary:</span>
+                    <span className="text-muted-foreground">e.g. $150,000 / year</span>
+                  </div>
+                  <div className="p-2 rounded border border-border/80 bg-muted/20 flex items-center justify-between text-[11px]">
+                    <span className="font-medium text-foreground">3. Work Authorization:</span>
+                    <span className="text-emerald-600 font-semibold">Yes / No required</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between pt-1">
+            <span className="text-xs text-muted-foreground">
+              Ashby ATS: live public links with formatted descriptions & custom fields
+            </span>
+            <Button asChild size="sm">
+              <Link href="/jobs">
+                Explore Tech Jobs
+                <ArrowRight className="size-3.5" />
+              </Link>
+            </Button>
           </div>
         </div>
       )}

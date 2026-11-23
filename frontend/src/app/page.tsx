@@ -4,6 +4,7 @@ import {
   ArrowRight,
   Award,
   Bot,
+  Briefcase,
   Building2,
   CheckCircle2,
   Code2,
@@ -27,6 +28,7 @@ import { AudienceTabs } from "@/components/marketing/AudienceTabs";
 import { BentoFeatureShowcase } from "@/components/marketing/BentoFeatureShowcase";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { HeroShowcase } from "@/components/marketing/HeroShowcase";
+import { HomeJobShowcase } from "@/components/marketing/HomeJobShowcase";
 import { SectionHeading } from "@/components/marketing/SectionHeading";
 import { SiteFooter } from "@/components/marketing/SiteFooter";
 import { SiteHeader } from "@/components/marketing/SiteHeader";
@@ -88,11 +90,11 @@ const QUICK_LAUNCH_ITEMS = [
     icon: Award,
   },
   {
-    title: "AI Video Interviews",
-    badge: "Enterprise",
-    desc: "Multi-Sensor Proctoring",
-    href: "/recruiter/interviews",
-    icon: Video,
+    title: "Job Openings",
+    badge: "Ashby ATS",
+    desc: "Verified Tech Roles",
+    href: "/jobs",
+    icon: Briefcase,
   },
   {
     title: "Competitions",
@@ -311,6 +313,23 @@ export default function HomePage() {
 
             <div className="mt-14">
               <BentoFeatureShowcase />
+            </div>
+          </div>
+        </section>
+
+        {/* =========================================================================
+            JOB OPENINGS & ASHBY ATS SHOWCASE (New Feature Section)
+            ========================================================================= */}
+        <section id="jobs" className="scroll-mt-20 border-b border-border bg-muted/20 py-16 lg:py-24">
+          <div className="container">
+            <SectionHeading
+              eyebrow="Direct Company Hiring · Ashby ATS"
+              title="Verified Tech Openings with Transparent Criteria"
+              description="Explore career opportunities formatted with bold headings, bullet requirements, and instant tabbed application fields."
+            />
+
+            <div className="mt-12">
+              <HomeJobShowcase />
             </div>
           </div>
         </section>
