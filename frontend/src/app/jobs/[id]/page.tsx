@@ -20,6 +20,7 @@ import {
   Sparkles,
   Globe,
   Loader2,
+  ListPlus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { usePublicJob, useSubmitJobApplication } from "@/hooks/useJobs";
@@ -27,6 +28,7 @@ import { useResumes } from "@/hooks/useResumes";
 import { useCurrentUser } from "@/store/auth";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { JobDescriptionRenderer } from "@/components/jobs/JobDescriptionRenderer";
 import {
   JOB_WORKPLACE_TYPE_LABELS,
   JOB_EMPLOYMENT_TYPE_LABELS,
@@ -70,6 +72,7 @@ export default function AshbyJobDetailsPage() {
   // Custom Questions Answers State
   const [customAnswers, setCustomAnswers] = useState<Record<string, any>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [activeTab, setActiveTab] = useState<"description" | "apply">("description");
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -101,10 +104,13 @@ export default function AshbyJobDetailsPage() {
   };
 
   const scrollToApply = () => {
-    const el = document.getElementById("apply-section");
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth" });
-    }
+    setActiveTab("apply");
+    setTimeout(() => {
+      const el = document.getElementById("apply-section");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth" });
+      }
+    }, 50);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -393,35 +399,84 @@ export default function AshbyJobDetailsPage() {
               </div>
             </div>
 
-            {/* Description Body */}
-            <div className="prose prose-slate dark:prose-invert max-w-none text-foreground/90 leading-relaxed space-y-6">
+            {/* Tab navigation */}
+            <div className="flex items-center gap-2 border-b border-border mb-8">
+              <button
+                type="button"
+                onClick={() => setActiveTab("description")}
+                className={cn(
+                  "pb-3 px-4 text-sm font-semibold border-b-2 transition-all flex items-center gap-2",
+                  activeTab === "description"
+                    ? "border-primary-600 text-primary-600 dark:text-primary-400"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <FileText className="w-4 h-4" />
+                <span>Job Description</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("apply")}
+                className={cn(
+                  "pb-3 px-4 text-sm font-semibold border-b-2 transition-all flex items-center gap-2",
+                  activeTab === "apply"
+                    ? "border-primary-600 text-primary-600 dark:text-primary-400"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Briefcase className="w-4 h-4" />
+                <span>Application Form & Fields</span>
+                {job.customQuestions && job.customQuestions.length > 0 && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary-100 dark:bg-primary-900/60 text-primary-700 dark:text-primary-300">
+                    {job.customQuestions.length} custom fields
+                  </span>
+                )}
+              </button>
+            </div>
+
+            {/* Tab 1: Description Body */}
+            <div className={cn("space-y-6", activeTab === "description" ? "block" : "hidden")}>
               {job.overview && (
                 <div className="text-base text-foreground font-normal leading-relaxed bg-muted/30 p-4 rounded-xl border border-border/60">
                   {job.overview}
                 </div>
               )}
 
-              {/* Render the formatted description */}
-              <div className="whitespace-pre-line text-sm sm:text-base leading-relaxed">
-                {job.description}
+              {/* Render the formatted description with bold headings & bullets */}
+              <div className="bg-card border border-border/80 rounded-2xl p-6 sm:p-8 shadow-xs">
+                <JobDescriptionRenderer content={job.description} />
               </div>
 
               {job.requirements && (
-                <div className="mt-8 pt-6 border-t border-border/60">
-                  <h3 className="text-lg font-bold text-foreground mb-3">
+                <div className="bg-card border border-border/80 rounded-2xl p-6 sm:p-8 shadow-xs space-y-3">
+                  <h3 className="text-base sm:text-lg font-bold text-foreground">
                     Key Requirements & Qualifications
                   </h3>
-                  <div className="whitespace-pre-line text-sm sm:text-base text-muted-foreground">
-                    {job.requirements}
-                  </div>
+                  <JobDescriptionRenderer content={job.requirements} />
                 </div>
               )}
+
+              {/* Call-to-Action to Apply */}
+              <div className="p-6 rounded-2xl bg-gradient-to-r from-primary-50/60 via-card to-card dark:from-primary-950/30 dark:via-card dark:to-card border border-primary-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-base font-bold text-foreground">Interested in this role?</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">Submit your application to {job.company.name} directly with your profile.</p>
+                </div>
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={scrollToApply}
+                  className="px-6 shadow-sm shrink-0"
+                >
+                  Apply for this Job
+                </Button>
+              </div>
             </div>
 
-            {/* Application Section (Ashby Styled Form) */}
+            {/* Tab 2: Application Section (Ashby Styled Form) */}
             <div
               id="apply-section"
-              className="mt-14 pt-10 border-t border-border scroll-mt-20"
+              className={cn("scroll-mt-20", activeTab === "apply" ? "block" : "hidden")}
             >
               <div className="bg-card border border-border rounded-2xl p-6 sm:p-10 shadow-sm">
                 <div className="mb-8">

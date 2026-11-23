@@ -10,6 +10,8 @@ import {
   Video,
   ClipboardList,
   Loader2,
+  FileText,
+  ListPlus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useCompanyJobPosting, useUpdateJobPosting } from "@/hooks/useJobs";
@@ -17,6 +19,8 @@ import { useAssessments } from "@/hooks/useAssessments";
 import { useInterviews } from "@/hooks/useInterviews";
 import { Button } from "@/components/ui/Button";
 import { CustomFieldBuilder } from "@/components/recruiter/CustomFieldBuilder";
+import { JobDescriptionEditor } from "@/components/jobs/JobDescriptionEditor";
+import { cn } from "@/lib/utils";
 import type {
   JobWorkplaceType,
   JobEmploymentType,
@@ -55,6 +59,7 @@ export default function EditJobPostingPage() {
   const [overview, setOverview] = useState("");
   const [description, setDescription] = useState("");
   const [requirements, setRequirements] = useState("");
+  const [contentTab, setContentTab] = useState<"description" | "fields">("description");
 
   const [assessmentId, setAssessmentId] = useState<string>("");
   const [interviewId, setInterviewId] = useState<string>("");
@@ -341,44 +346,113 @@ export default function EditJobPostingPage() {
           </div>
         </div>
 
-        {/* Section 3: Job Description */}
-        <div className="bg-card border border-border rounded-xl p-6 space-y-4 shadow-sm">
-          <h2 className="text-base font-bold text-foreground">
-            Job Description (Markdown Supported)
-          </h2>
+        {/* Section 3: Job Description & Application Fields (Tabbed Interface) */}
+        <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+          {/* Tab Selection Header */}
+          <div className="border-b border-border bg-muted/20 px-6 pt-4 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 className="text-base font-bold text-foreground">
+                Role Details & Application Fields
+              </h2>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Switch between editing the job description and customizing the application input fields.
+              </p>
+            </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-foreground mb-1.5">
-              Role Overview / One-Liner
-            </label>
-            <input
-              type="text"
-              value={overview}
-              onChange={(e) => setOverview(e.target.value)}
-              className="w-full h-10 px-3.5 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500"
-            />
+            <div className="flex items-center gap-1.5 bg-background p-1 rounded-xl border border-border self-start sm:self-auto">
+              <button
+                type="button"
+                onClick={() => setContentTab("description")}
+                className={cn(
+                  "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2",
+                  contentTab === "description"
+                    ? "bg-primary-600 text-white shadow-xs"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                )}
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>Job Description</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setContentTab("fields")}
+                className={cn(
+                  "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2",
+                  contentTab === "fields"
+                    ? "bg-primary-600 text-white shadow-xs"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                )}
+              >
+                <ListPlus className="w-3.5 h-3.5" />
+                <span>Job Fields</span>
+                <span
+                  className={cn(
+                    "px-1.5 py-0.2 rounded-full text-[10px] font-bold",
+                    contentTab === "fields"
+                      ? "bg-white/20 text-white"
+                      : "bg-muted text-foreground"
+                  )}
+                >
+                  {customQuestions.length}
+                </span>
+              </button>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-foreground mb-1.5">
-              Full Description & Requirements <span className="text-rose-500">*</span>
-            </label>
-            <textarea
-              rows={14}
-              required
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full p-4 rounded-lg border border-border bg-background font-mono text-xs sm:text-sm text-foreground leading-relaxed focus:outline-none focus:ring-2 focus:ring-primary-500"
-            />
-          </div>
-        </div>
+          <div className="p-6">
+            {contentTab === "description" ? (
+              <div className="space-y-4">
+                <JobDescriptionEditor
+                  value={description}
+                  onChange={setDescription}
+                  overview={overview}
+                  onOverviewChange={setOverview}
+                />
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-sm font-bold text-foreground">
+                    Candidate Application Form & Custom Input Fields
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Control the input fields candidates see when applying for this role. Add questions, select input types (Text, Choices, Yes/No, Number, File), and toggle mandatory requirements.
+                  </p>
+                </div>
 
-        {/* Section 4: Application Input Fields Builder (Controlled by Admin) */}
-        <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
-          <CustomFieldBuilder
-            questions={customQuestions}
-            onChange={setCustomQuestions}
-          />
+                {/* Standard Core Fields Overview */}
+                <div className="bg-muted/20 border border-border/70 rounded-xl p-4 space-y-2">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Standard Core Fields (Included Automatically)
+                  </span>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                    <div className="p-2 rounded-lg border border-border/80 bg-background flex items-center justify-between">
+                      <span className="font-medium text-foreground">Full Name</span>
+                      <span className="text-[9px] font-bold text-rose-500 uppercase">Required</span>
+                    </div>
+                    <div className="p-2 rounded-lg border border-border/80 bg-background flex items-center justify-between">
+                      <span className="font-medium text-foreground">Email Address</span>
+                      <span className="text-[9px] font-bold text-rose-500 uppercase">Required</span>
+                    </div>
+                    <div className="p-2 rounded-lg border border-border/80 bg-background flex items-center justify-between">
+                      <span className="font-medium text-foreground">Resume / CV</span>
+                      <span className="text-[9px] font-bold text-rose-500 uppercase">Required</span>
+                    </div>
+                    <div className="p-2 rounded-lg border border-border/80 bg-background flex items-center justify-between">
+                      <span className="font-medium text-foreground">Phone & Links</span>
+                      <span className="text-[9px] text-muted-foreground">Optional</span>
+                    </div>
+                  </div>
+                </div>
+
+                <CustomFieldBuilder
+                  questions={customQuestions}
+                  onChange={setCustomQuestions}
+                />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Section 5: SkillGauge Integrations */}

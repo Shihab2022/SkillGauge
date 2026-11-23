@@ -22,10 +22,13 @@ import {
   HelpCircle,
   Share2,
   Loader2,
+  FileText,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useCompanyJobPosting } from "@/hooks/useJobs";
 import { Button } from "@/components/ui/Button";
+import { JobDescriptionRenderer } from "@/components/jobs/JobDescriptionRenderer";
+import { cn } from "@/lib/utils";
 import {
   JOB_POSTING_STATUS_LABELS,
   JOB_WORKPLACE_TYPE_LABELS,
@@ -42,6 +45,7 @@ export default function RecruiterJobOverviewPage() {
 
   const { data: job, isLoading, isError } = useCompanyJobPosting(id);
   const [copied, setCopied] = useState(false);
+  const [activeTab, setActiveTab] = useState<"description" | "fields">("description");
 
   const getShareUrl = () => {
     if (typeof window !== "undefined") {
@@ -254,113 +258,204 @@ export default function RecruiterJobOverviewPage() {
         </div>
       </div>
 
-      {/* Admin Controlled Application Input Fields */}
-      <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-4">
-        <div className="flex items-center justify-between">
+      {/* Job Description & Application Fields (Tabbed Interface) */}
+      <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
+        {/* Tab Selection Header */}
+        <div className="border-b border-border bg-muted/20 px-6 pt-4 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h2 className="text-base font-bold text-foreground flex items-center gap-2">
-              <ListPlus className="w-4 h-4 text-primary-600" />
-              Application Form & Input Fields (Controlled by Admin)
+            <h2 className="text-base font-bold text-foreground">
+              Job Post Details & Candidate Fields
             </h2>
             <p className="text-xs text-muted-foreground mt-0.5">
-              These are the input fields candidates must fill out when applying for this specific position. You can add, edit, or remove fields anytime.
+              Review public job description formatting and candidate screening inputs.
             </p>
           </div>
 
-          <Link href={`/recruiter/jobs/${job.id}/edit`}>
-            <Button variant="outline" size="sm" className="text-xs gap-1.5">
-              <Edit className="w-3.5 h-3.5" /> Edit Input Fields
-            </Button>
-          </Link>
-        </div>
+          <div className="flex items-center gap-1.5 bg-background p-1 rounded-xl border border-border self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={() => setActiveTab("description")}
+              className={cn(
+                "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2",
+                activeTab === "description"
+                  ? "bg-primary-600 text-white shadow-xs"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              )}
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>Job Description</span>
+            </button>
 
-        {/* Standard Core Fields */}
-        <div className="space-y-2 pt-2">
-          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Standard Core Fields (Included Automatically)
-          </span>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-            <div className="p-2.5 rounded-lg border border-border/80 bg-muted/20 flex items-center justify-between">
-              <span className="font-medium text-foreground">Full Name</span>
-              <span className="text-[10px] font-bold text-rose-500 uppercase">Required</span>
-            </div>
-            <div className="p-2.5 rounded-lg border border-border/80 bg-muted/20 flex items-center justify-between">
-              <span className="font-medium text-foreground">Email Address</span>
-              <span className="text-[10px] font-bold text-rose-500 uppercase">Required</span>
-            </div>
-            <div className="p-2.5 rounded-lg border border-border/80 bg-muted/20 flex items-center justify-between">
-              <span className="font-medium text-foreground">Resume / CV</span>
-              <span className="text-[10px] font-bold text-rose-500 uppercase">Required</span>
-            </div>
-            <div className="p-2.5 rounded-lg border border-border/80 bg-muted/20 flex items-center justify-between">
-              <span className="font-medium text-foreground">Phone Number</span>
-              <span className="text-[10px] text-muted-foreground">Optional</span>
-            </div>
-            <div className="p-2.5 rounded-lg border border-border/80 bg-muted/20 flex items-center justify-between">
-              <span className="font-medium text-foreground">Location</span>
-              <span className="text-[10px] text-muted-foreground">Optional</span>
-            </div>
-            <div className="p-2.5 rounded-lg border border-border/80 bg-muted/20 flex items-center justify-between">
-              <span className="font-medium text-foreground">LinkedIn URL</span>
-              <span className="text-[10px] text-muted-foreground">Optional</span>
-            </div>
-            <div className="p-2.5 rounded-lg border border-border/80 bg-muted/20 flex items-center justify-between">
-              <span className="font-medium text-foreground">GitHub URL</span>
-              <span className="text-[10px] text-muted-foreground">Optional</span>
-            </div>
-            <div className="p-2.5 rounded-lg border border-border/80 bg-muted/20 flex items-center justify-between">
-              <span className="font-medium text-foreground">Cover Letter</span>
-              <span className="text-[10px] text-muted-foreground">Optional</span>
-            </div>
+            <button
+              type="button"
+              onClick={() => setActiveTab("fields")}
+              className={cn(
+                "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2",
+                activeTab === "fields"
+                  ? "bg-primary-600 text-white shadow-xs"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              )}
+            >
+              <ListPlus className="w-3.5 h-3.5" />
+              <span>Job Fields</span>
+              <span
+                className={cn(
+                  "px-1.5 py-0.2 rounded-full text-[10px] font-bold",
+                  activeTab === "fields"
+                    ? "bg-white/20 text-white"
+                    : "bg-muted text-foreground"
+                )}
+              >
+                {job.customQuestions?.length || 0}
+              </span>
+            </button>
           </div>
         </div>
 
-        {/* Custom Input Fields Added by Admin */}
-        <div className="space-y-3 pt-3 border-t border-border">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Custom Job-Specific Fields ({job.customQuestions?.length || 0})
-            </span>
-          </div>
+        {/* Tab Content */}
+        <div className="p-6">
+          {activeTab === "description" ? (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Formatted Description (Public Rendering)
+                </span>
+                <Link href={`/recruiter/jobs/${job.id}/edit`}>
+                  <Button variant="outline" size="sm" className="text-xs gap-1.5">
+                    <Edit className="w-3.5 h-3.5" /> Edit Description
+                  </Button>
+                </Link>
+              </div>
 
-          {!job.customQuestions || job.customQuestions.length === 0 ? (
-            <div className="p-4 rounded-xl border border-dashed border-border text-center text-xs text-muted-foreground">
-              No custom fields configured for this role yet. Click &quot;Edit Input Fields&quot; to add custom questions like Notice Period, Expected Salary, or Work Authorization.
+              {job.overview && (
+                <div className="p-3.5 bg-muted/30 rounded-xl text-xs sm:text-sm font-medium text-foreground border border-border/80">
+                  {job.overview}
+                </div>
+              )}
+
+              <div className="pt-2 border-t border-border/60">
+                <JobDescriptionRenderer content={job.description} />
+              </div>
+
+              {job.requirements && (
+                <div className="mt-6 pt-4 border-t border-border/60 space-y-2">
+                  <h3 className="text-sm font-bold text-foreground">
+                    Key Requirements & Qualifications
+                  </h3>
+                  <JobDescriptionRenderer content={job.requirements} />
+                </div>
+              )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-2.5">
-              {job.customQuestions.map((q, idx) => (
-                <div
-                  key={q.id || idx}
-                  className="p-3.5 rounded-xl border border-border bg-card flex flex-col sm:flex-row sm:items-center justify-between gap-2"
-                >
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-foreground">
-                        {idx + 1}. {q.question}
-                      </span>
-                      {q.required ? (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 border border-rose-200 dark:border-rose-900">
-                          Mandatory *
-                        </span>
-                      ) : (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted text-muted-foreground">
-                          Optional
-                        </span>
-                      )}
-                    </div>
-                    {q.options && q.options.length > 0 && (
-                      <p className="text-[11px] text-muted-foreground">
-                        Options: {q.options.join(", ")}
-                      </p>
-                    )}
-                  </div>
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <ListPlus className="w-4 h-4 text-primary-600" />
+                    Application Form & Input Fields (Controlled by Admin)
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    These are the input fields candidates must fill out when applying for this specific position.
+                  </p>
+                </div>
 
-                  <span className="px-2.5 py-1 rounded-md text-[11px] font-mono font-medium bg-muted text-muted-foreground self-start sm:self-center">
-                    Type: {q.type}
+                <Link href={`/recruiter/jobs/${job.id}/edit`}>
+                  <Button variant="outline" size="sm" className="text-xs gap-1.5">
+                    <Edit className="w-3.5 h-3.5" /> Edit Input Fields
+                  </Button>
+                </Link>
+              </div>
+
+              {/* Standard Core Fields */}
+              <div className="space-y-2">
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Standard Core Fields (Included Automatically)
+                </span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                  <div className="p-2.5 rounded-lg border border-border/80 bg-muted/20 flex items-center justify-between">
+                    <span className="font-medium text-foreground">Full Name</span>
+                    <span className="text-[10px] font-bold text-rose-500 uppercase">Required</span>
+                  </div>
+                  <div className="p-2.5 rounded-lg border border-border/80 bg-muted/20 flex items-center justify-between">
+                    <span className="font-medium text-foreground">Email Address</span>
+                    <span className="text-[10px] font-bold text-rose-500 uppercase">Required</span>
+                  </div>
+                  <div className="p-2.5 rounded-lg border border-border/80 bg-muted/20 flex items-center justify-between">
+                    <span className="font-medium text-foreground">Resume / CV</span>
+                    <span className="text-[10px] font-bold text-rose-500 uppercase">Required</span>
+                  </div>
+                  <div className="p-2.5 rounded-lg border border-border/80 bg-muted/20 flex items-center justify-between">
+                    <span className="font-medium text-foreground">Phone Number</span>
+                    <span className="text-[10px] text-muted-foreground">Optional</span>
+                  </div>
+                  <div className="p-2.5 rounded-lg border border-border/80 bg-muted/20 flex items-center justify-between">
+                    <span className="font-medium text-foreground">Location</span>
+                    <span className="text-[10px] text-muted-foreground">Optional</span>
+                  </div>
+                  <div className="p-2.5 rounded-lg border border-border/80 bg-muted/20 flex items-center justify-between">
+                    <span className="font-medium text-foreground">LinkedIn URL</span>
+                    <span className="text-[10px] text-muted-foreground">Optional</span>
+                  </div>
+                  <div className="p-2.5 rounded-lg border border-border/80 bg-muted/20 flex items-center justify-between">
+                    <span className="font-medium text-foreground">GitHub URL</span>
+                    <span className="text-[10px] text-muted-foreground">Optional</span>
+                  </div>
+                  <div className="p-2.5 rounded-lg border border-border/80 bg-muted/20 flex items-center justify-between">
+                    <span className="font-medium text-foreground">Cover Letter</span>
+                    <span className="text-[10px] text-muted-foreground">Optional</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Custom Input Fields Added by Admin */}
+              <div className="space-y-3 pt-3 border-t border-border">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Custom Job-Specific Fields ({job.customQuestions?.length || 0})
                   </span>
                 </div>
-              ))}
+
+                {!job.customQuestions || job.customQuestions.length === 0 ? (
+                  <div className="p-4 rounded-xl border border-dashed border-border text-center text-xs text-muted-foreground">
+                    No custom fields configured for this role yet. Click &quot;Edit Input Fields&quot; to add custom questions like Notice Period, Expected Salary, or Work Authorization.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-2.5">
+                    {job.customQuestions.map((q, idx) => (
+                      <div
+                        key={q.id || idx}
+                        className="p-3.5 rounded-xl border border-border bg-card flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-foreground">
+                              {idx + 1}. {q.question}
+                            </span>
+                            {q.required ? (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 border border-rose-200 dark:border-rose-900">
+                                Mandatory *
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted text-muted-foreground">
+                                Optional
+                              </span>
+                            )}
+                          </div>
+                          {q.options && q.options.length > 0 && (
+                            <p className="text-[11px] text-muted-foreground">
+                              Options: {q.options.join(", ")}
+                            </p>
+                          )}
+                        </div>
+
+                        <span className="px-2.5 py-1 rounded-md text-[11px] font-mono font-medium bg-muted text-muted-foreground self-start sm:self-center">
+                          Type: {q.type}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -395,21 +490,6 @@ export default function RecruiterJobOverviewPage() {
           </div>
         </div>
       )}
-
-      {/* Job Description Preview */}
-      <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-4">
-        <h2 className="text-base font-bold text-foreground">
-          Job Description Preview
-        </h2>
-        {job.overview && (
-          <div className="p-3 bg-muted/30 rounded-xl text-xs sm:text-sm font-medium text-foreground border border-border/80">
-            {job.overview}
-          </div>
-        )}
-        <div className="whitespace-pre-line text-xs sm:text-sm text-foreground/90 leading-relaxed font-sans border-t border-border pt-4">
-          {job.description}
-        </div>
-      </div>
     </div>
   );
 }
