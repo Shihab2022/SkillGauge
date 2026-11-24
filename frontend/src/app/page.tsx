@@ -29,9 +29,11 @@ import { BentoFeatureShowcase } from "@/components/marketing/BentoFeatureShowcas
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { HeroShowcase } from "@/components/marketing/HeroShowcase";
 import { HomeJobShowcase } from "@/components/marketing/HomeJobShowcase";
+import { PlatformWorkflow } from "@/components/marketing/PlatformWorkflow";
 import { SectionHeading } from "@/components/marketing/SectionHeading";
 import { SiteFooter } from "@/components/marketing/SiteFooter";
 import { SiteHeader } from "@/components/marketing/SiteHeader";
+import { TestimonialSection } from "@/components/marketing/TestimonialSection";
 import {
   ANTI_CHEAT_LABELS,
   APP_DESCRIPTION,
@@ -60,6 +62,7 @@ const QUICK_LAUNCH_ITEMS = [
     desc: "DSA, SQL & Full-Stack",
     href: "/practice",
     icon: Code2,
+    gradient: "from-emerald-500/10 to-emerald-500/5 text-emerald-600 dark:text-emerald-400",
   },
   {
     title: "Online Compiler",
@@ -67,6 +70,7 @@ const QUICK_LAUNCH_ITEMS = [
     desc: "Pyodide WASM & SQLite",
     href: "/playground",
     icon: Terminal,
+    gradient: "from-sky-500/10 to-sky-500/5 text-sky-600 dark:text-sky-400",
   },
   {
     title: "ATS Resume Builder",
@@ -74,6 +78,7 @@ const QUICK_LAUNCH_ITEMS = [
     desc: "20+ ATS-Safe Templates",
     href: "/resume-builder",
     icon: FileText,
+    gradient: "from-blue-500/10 to-blue-500/5 text-blue-600 dark:text-blue-400",
   },
   {
     title: "Resume Analyzer",
@@ -81,13 +86,15 @@ const QUICK_LAUNCH_ITEMS = [
     desc: "JD Keyword Gap Analysis",
     href: "/resume-analyzer",
     icon: ScanSearch,
+    gradient: "from-indigo-500/10 to-indigo-500/5 text-indigo-600 dark:text-indigo-400",
   },
   {
-    title: "Tech Certifications",
+    title: "Certifications",
     badge: "Proctored",
     desc: "React, Node, Python & SQL",
     href: "/exams",
     icon: Award,
+    gradient: "from-amber-500/10 to-amber-500/5 text-amber-600 dark:text-amber-400",
   },
   {
     title: "Job Openings",
@@ -95,6 +102,7 @@ const QUICK_LAUNCH_ITEMS = [
     desc: "Verified Tech Roles",
     href: "/jobs",
     icon: Briefcase,
+    gradient: "from-violet-500/10 to-violet-500/5 text-violet-600 dark:text-violet-400",
   },
   {
     title: "Competitions",
@@ -102,6 +110,7 @@ const QUICK_LAUNCH_ITEMS = [
     desc: "Timed Hackathons & Cups",
     href: "/competitions",
     icon: Trophy,
+    gradient: "from-rose-500/10 to-rose-500/5 text-rose-600 dark:text-rose-400",
   },
 ];
 
@@ -155,51 +164,65 @@ export default function HomePage() {
             HERO SECTION
             ========================================================================= */}
         <section className="relative overflow-hidden border-b border-border">
-          {/* Subtle Modern Glow Backgrounds */}
+          {/* Layered Modern Mesh & Radial Backgrounds */}
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-0 grid-bg bg-grid opacity-35 mask-fade-x"
+            className="pointer-events-none absolute inset-0 grid-bg bg-grid opacity-30 mask-radial"
           />
           <div
             aria-hidden
-            className="pointer-events-none absolute -top-48 left-1/2 h-[36rem] w-[36rem] -translate-x-1/2 rounded-full bg-gradient-to-tr from-primary-600/20 via-violet-500/15 to-sky-400/20 blur-3xl"
+            className="pointer-events-none absolute -top-48 left-1/2 h-[42rem] w-[50rem] -translate-x-1/2 rounded-full bg-gradient-to-tr from-primary-600/20 via-violet-500/15 to-sky-400/20 blur-3xl opacity-80"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute top-1/3 -right-24 h-96 w-96 rounded-full bg-indigo-500/10 blur-3xl"
           />
 
           <div className="container relative py-12 lg:py-20">
             <div className="grid items-center gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-12">
               <div className="animate-fade-up">
-                {/* Modern Pill Badge */}
-                <div className="inline-flex items-center gap-2 rounded-full border border-primary-500/20 bg-primary-500/10 px-3.5 py-1 text-xs font-medium text-primary-700 dark:text-primary-300 shadow-sm backdrop-blur-md">
-                  <span className="flex size-2 rounded-full bg-primary-500 animate-pulse" />
-                  <span className="font-semibold">v1.4 Live:</span>
-                  <span>AI Video Interviews &amp; ATS Resume Suite</span>
-                  <ArrowRight className="size-3" />
-                </div>
+                {/* Modern Interactive Pill Badge */}
+                <Link
+                  href="/jobs"
+                  className="group inline-flex items-center gap-2 rounded-full border border-primary-500/30 bg-primary-500/10 px-3.5 py-1.5 text-xs font-medium text-primary-700 dark:text-primary-300 shadow-sm backdrop-blur-md transition-all hover:border-primary-500/50 hover:bg-primary-500/15"
+                >
+                  <span className="relative flex size-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
+                  </span>
+                  <span className="font-semibold text-foreground">v1.4 Live:</span>
+                  <span>Ashby ATS Direct Apply &amp; AI Video Interviews</span>
+                  <ArrowRight className="size-3 text-primary-500 transition-transform group-hover:translate-x-0.5" />
+                </Link>
 
-                <h1 className="mt-6 text-3xl font-extrabold leading-[1.08] tracking-tight sm:text-5xl lg:text-[3.35rem]">
+                <h1 className="mt-6 text-3xl font-extrabold leading-[1.08] tracking-tight sm:text-5xl lg:text-[3.45rem]">
                   Developer assessment, practice &amp;{" "}
                   <span className="gradient-text">career intelligence.</span>
                 </h1>
 
                 <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-                  One unified engine. Companies evaluate technical talent with proctored assessments
-                  and AI video interviews. Individual engineers practice across 1,000+ problems,
-                  build ATS resumes, and certify real skills.
+                  One unified engine. Software engineers practice across 1,000+ problems, execute code in 10 runtimes,
+                  and build deterministic ATS resumes. Companies evaluate talent with proctored assessments and AI video interviews.
                 </p>
 
                 {/* Main Action CTAs */}
                 <div className="mt-8 flex flex-wrap items-center gap-3.5">
-                  <Button asChild size="lg" className="shadow-pop">
+                  <Button asChild size="lg" className="shadow-pop group">
                     <Link href="/practice">
                       <Code2 className="size-4" />
                       Start Practicing Free
-                      <ArrowRight className="size-4" />
+                      <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
                     </Link>
                   </Button>
 
-                  <Button asChild size="lg" variant="outline" className="border-border">
+                  <Button
+                    asChild
+                    size="lg"
+                    variant="outline"
+                    className="border-border/80 bg-card/70 backdrop-blur-sm hover:border-primary-500/40"
+                  >
                     <Link href="/resume-builder">
-                      <FileText className="size-4" />
+                      <FileText className="size-4 text-primary-500" />
                       Build ATS Resume
                       <Badge tone="green" size="sm" className="ml-1.5 py-0 px-1 text-[10px]">
                         Guest Mode
@@ -229,6 +252,10 @@ export default function HomePage() {
                     <CheckCircle2 className="size-4 text-emerald-500" />
                     <span>Server-authoritative proctoring</span>
                   </li>
+                  <li className="flex items-center gap-1.5">
+                    <CheckCircle2 className="size-4 text-emerald-500" />
+                    <span>Ashby ATS integration</span>
+                  </li>
                 </ul>
               </div>
 
@@ -240,10 +267,10 @@ export default function HomePage() {
           </div>
 
           {/* =========================================================================
-              QUICK LAUNCH DOCK
+              FLOATING QUICK LAUNCH DOCK
               ========================================================================= */}
           <div className="border-t border-border bg-muted/20 backdrop-blur-xl">
-            <div className="container py-3.5">
+            <div className="container py-4">
               <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
                 <span className="shrink-0 text-[11px] font-bold uppercase tracking-wider text-muted-foreground pr-3 border-r border-border/80 hidden sm:inline-flex items-center gap-1.5">
                   <Sparkles className="size-3 text-primary-500" />
@@ -257,7 +284,12 @@ export default function HomePage() {
                       href={item.href}
                       className="group flex shrink-0 items-center gap-2.5 rounded-2xl border border-border/70 bg-card/90 px-3.5 py-2 text-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-primary-500/50 hover:shadow-card hover:bg-card"
                     >
-                      <span className="flex size-7 items-center justify-center rounded-xl bg-primary-500/10 text-primary-600 dark:text-primary-400 group-hover:bg-primary-500 group-hover:text-white transition-all">
+                      <span
+                        className={cn(
+                          "flex size-7 items-center justify-center rounded-xl bg-gradient-to-br transition-all group-hover:scale-105",
+                          item.gradient,
+                        )}
+                      >
                         <Icon className="size-3.5" />
                       </span>
                       <div className="text-left">
@@ -282,13 +314,19 @@ export default function HomePage() {
               STATS METRIC STRIP
               ========================================================================= */}
           <div className="border-t border-border bg-muted/30">
-            <div className="container grid grid-cols-2 gap-6 py-8 sm:grid-cols-3 lg:grid-cols-5">
+            <div className="container grid grid-cols-2 gap-4 sm:gap-6 py-8 sm:grid-cols-3 lg:grid-cols-5">
               {LANDING_STATS.map((stat) => (
-                <div key={stat.label} className="flex flex-col">
-                  <span className="font-mono text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-                    {stat.value}
-                  </span>
-                  <span className="mt-1 text-xs font-semibold text-foreground sm:text-sm">
+                <div
+                  key={stat.label}
+                  className="relative flex flex-col rounded-2xl border border-border/60 bg-card/60 p-4 backdrop-blur-sm transition-all hover:border-primary-500/30"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-2xl font-black tracking-tight text-foreground sm:text-3xl">
+                      {stat.value}
+                    </span>
+                    <span className="size-2 rounded-full bg-emerald-500/80" />
+                  </div>
+                  <span className="mt-1.5 text-xs font-bold text-foreground sm:text-sm">
                     {stat.label}
                   </span>
                   <span className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
@@ -301,7 +339,7 @@ export default function HomePage() {
         </section>
 
         {/* =========================================================================
-            BENTO GRID FEATURE SHOWCASE (Redesigned & Human-Crafted)
+            BENTO GRID FEATURE SHOWCASE
             ========================================================================= */}
         <section id="features" className="scroll-mt-20 border-b border-border py-16 lg:py-24">
           <div className="container">
@@ -318,9 +356,26 @@ export default function HomePage() {
         </section>
 
         {/* =========================================================================
-            JOB OPENINGS & ASHBY ATS SHOWCASE (New Feature Section)
+            NEW: INTERACTIVE PLATFORM WORKFLOW PIPELINE
             ========================================================================= */}
-        <section id="jobs" className="scroll-mt-20 border-b border-border bg-muted/20 py-16 lg:py-24">
+        <section id="workflow" className="scroll-mt-20 border-b border-border bg-muted/20 py-16 lg:py-24">
+          <div className="container">
+            <SectionHeading
+              eyebrow="Execution Pipeline"
+              title="How SkillGauge Works: From Practice to Hired"
+              description="Whether you are an engineer sharpening your edge or an enterprise hiring team evaluating hundreds of candidates, follow a streamlined four-step workflow."
+            />
+
+            <div className="mt-12">
+              <PlatformWorkflow />
+            </div>
+          </div>
+        </section>
+
+        {/* =========================================================================
+            JOB OPENINGS & ASHBY ATS SHOWCASE
+            ========================================================================= */}
+        <section id="jobs" className="scroll-mt-20 border-b border-border py-16 lg:py-24">
           <div className="container">
             <SectionHeading
               eyebrow="Direct Company Hiring · Ashby ATS"
@@ -432,7 +487,7 @@ export default function HomePage() {
                 </div>
 
                 {/* Real Terminal Event Log */}
-                <div className="mt-6 rounded-xl border border-slate-800 bg-slate-950 p-3.5 font-mono text-[11px] text-slate-300 space-y-1.5">
+                <div className="mt-6 rounded-xl border border-slate-800 bg-slate-950 p-3.5 font-mono text-[11px] text-slate-300 space-y-1.5 shadow-inner">
                   <div className="text-slate-500 pb-1 border-b border-white/10 text-[10px] uppercase font-sans font-semibold">
                     Live Attempt Events
                   </div>
@@ -467,7 +522,7 @@ export default function HomePage() {
         {/* =========================================================================
             SUPPORTED STACKS
             ========================================================================= */}
-        <section className="border-b border-border py-16 lg:py-20">
+        <section id="ecosystem" className="border-b border-border py-16 lg:py-20">
           <div className="container">
             <SectionHeading
               eyebrow="Supported Ecosystem"
@@ -529,6 +584,23 @@ export default function HomePage() {
         </section>
 
         {/* =========================================================================
+            NEW: COMMUNITY & INDUSTRY TESTIMONIALS (Social Proof)
+            ========================================================================= */}
+        <section id="reviews" className="scroll-mt-20 border-b border-border bg-muted/20 py-16 lg:py-24">
+          <div className="container">
+            <SectionHeading
+              eyebrow="Community &amp; Industry Trust"
+              title="Loved by Developers, Trusted by Engineering Leaders"
+              description="See how individual engineers sharpen their technical edge and high-growth companies hire top developers with SkillGauge."
+            />
+
+            <div className="mt-12">
+              <TestimonialSection />
+            </div>
+          </div>
+        </section>
+
+        {/* =========================================================================
             AUDIENCE SPLIT
             ========================================================================= */}
         <section id="solutions" className="scroll-mt-20 border-b border-border bg-muted/40 py-16 lg:py-24">
@@ -566,10 +638,14 @@ export default function HomePage() {
             ========================================================================= */}
         <section className="py-16 lg:py-24 bg-gradient-to-b from-background to-muted/50">
           <div className="container">
-            <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-primary-600 via-primary-700 to-violet-800 px-6 py-14 sm:px-12 lg:py-16 text-white shadow-glow">
+            <div className="relative overflow-hidden rounded-3xl border border-primary-500/30 bg-gradient-to-br from-primary-600 via-primary-700 to-violet-900 px-6 py-14 sm:px-12 lg:py-18 text-white shadow-glow">
               <div
                 aria-hidden
                 className="pointer-events-none absolute inset-0 grid-bg bg-grid opacity-15"
+              />
+              <div
+                aria-hidden
+                className="pointer-events-none absolute -top-24 -right-24 h-80 w-80 rounded-full bg-white/10 blur-2xl"
               />
 
               <div className="relative max-w-3xl mx-auto text-center">
@@ -582,17 +658,17 @@ export default function HomePage() {
                   Start Practicing, Certifying or Hiring Today
                 </h2>
 
-                <p className="mt-4 text-sm sm:text-base leading-relaxed text-white/85">
+                <p className="mt-4 text-sm sm:text-base leading-relaxed text-white/90">
                   Sign up free as an individual developer to practice 1,000+ problems, build an ATS
                   resume, and sit certification exams — or launch an enterprise workspace to run
                   proctored tests and AI video interviews for your engineering candidates.
                 </p>
 
                 <div className="mt-8 flex flex-wrap justify-center gap-3.5">
-                  <Button asChild size="lg" variant="secondary" className="shadow-lg">
+                  <Button asChild size="lg" variant="secondary" className="shadow-lg group">
                     <Link href="/register">
                       Create Free Developer Account
-                      <ArrowRight className="size-4" />
+                      <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
                     </Link>
                   </Button>
 
@@ -611,7 +687,7 @@ export default function HomePage() {
                     asChild
                     size="lg"
                     variant="outline"
-                    className="border-white/20 bg-black/20 text-white hover:bg-black/40 hover:text-white"
+                    className="border-white/20 bg-black/25 text-white hover:bg-black/40 hover:text-white"
                   >
                     <Link href="/resume-builder">
                       Try Resume Builder (No Login)

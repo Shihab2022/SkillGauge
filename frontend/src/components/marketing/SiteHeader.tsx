@@ -50,10 +50,10 @@ export function SiteHeader() {
   return (
     <header
       className={cn(
-        "sticky top-0 z-50 w-full border-b transition-colors",
+        "sticky top-0 z-50 w-full border-b transition-all duration-200",
         scrolled
-          ? "border-border bg-background/80 backdrop-blur-xl"
-          : "border-transparent bg-transparent",
+          ? "border-border/80 bg-background/85 backdrop-blur-xl shadow-sm"
+          : "border-border/40 bg-background/60 backdrop-blur-md",
       )}
     >
       <div className="container flex h-16 items-center justify-between gap-4">

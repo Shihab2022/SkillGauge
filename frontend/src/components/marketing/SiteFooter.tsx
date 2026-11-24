@@ -30,6 +30,13 @@ export function SiteFooter() {
               </span>
             </div>
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{APP_DESCRIPTION}</p>
+            <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-mono font-medium text-emerald-600 dark:text-emerald-400">
+              <span className="relative flex size-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
+              </span>
+              <span>All Systems Operational · 99.98% Uptime</span>
+            </div>
             <p className="mt-4 text-xs text-muted-foreground">
               B2B for companies, institutes and coding clubs — B2C for individual learners. Built on a
               multi-role REST API with server-timed attempts, sandboxed code execution and full audit

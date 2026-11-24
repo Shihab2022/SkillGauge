@@ -32,9 +32,30 @@ export function HeroShowcase() {
   const [jobInnerTab, setJobInnerTab] = useState<"desc" | "fields">("desc");
 
   return (
-    <div className="relative mx-auto w-full max-w-2xl overflow-hidden rounded-2xl border border-border/70 bg-card/95 shadow-pop backdrop-blur-xl transition-all">
+    <div className="relative mx-auto w-full max-w-2xl overflow-hidden rounded-3xl border border-border/80 bg-card/95 shadow-pop backdrop-blur-xl transition-all">
+      {/* Modern Window Chrome Bar */}
+      <div className="flex items-center justify-between border-b border-border/70 bg-muted/60 px-4 py-2 text-xs">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5" aria-hidden>
+            <span className="size-2.5 rounded-full bg-rose-500/80" />
+            <span className="size-2.5 rounded-full bg-amber-500/80" />
+            <span className="size-2.5 rounded-full bg-emerald-500/80" />
+          </div>
+          <span className="ml-1 text-[11px] font-mono text-muted-foreground hidden sm:inline">
+            SkillGauge Interactive Engine · v1.4
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5 text-[11px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">
+          <span className="relative flex size-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
+          </span>
+          <span>Live Runtime</span>
+        </div>
+      </div>
+
       {/* Tab Switcher Header */}
-      <div className="flex items-center justify-between border-b border-border/60 bg-muted/50 p-2 sm:px-4">
+      <div className="flex items-center justify-between border-b border-border/60 bg-muted/40 p-2 sm:px-3">
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
           <button
             type="button"

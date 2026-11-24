@@ -204,6 +204,19 @@
     -webkit-mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
   }
 
+  .mask-radial {
+    mask-image: radial-gradient(circle at center, black 45%, transparent 85%);
+    -webkit-mask-image: radial-gradient(circle at center, black 45%, transparent 85%);
+  }
+
+  .mesh-ambient {
+    background: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.16) 0%, rgba(139, 92, 246, 0.10) 35%, transparent 70%);
+  }
+
+  .shadow-subtle-glow {
+    box-shadow: 0 0 50px -12px rgba(99, 102, 241, 0.18);
+  }
+
   .text-balance {
     text-wrap: balance;
   }
