@@ -47,3 +47,16 @@ export const adminAuditQuerySchema = z.object({
     })
     .strict(),
 });
+
+export const adminAssessmentAiProctoringSchema = z.object({
+  params: z
+    .object({
+      id: z.string().uuid("Invalid assessment id"),
+    })
+    .strict(),
+  body: z
+    .object({
+      aiProctoringEnabled: z.boolean(),
+    })
+    .strict(),
+});

@@ -16,7 +16,8 @@ const assertAttemptOwnership = async (user: IAuthUser, attemptId: string) => {
   const attempt = await prisma.attempt.findUnique({
     where: { id: attemptId },
     include: {
-      assessment: { select: { companyId: true, createdBy: true } },
+      assessment: true,
+      answers: true,
     },
   });
   if (!attempt) throw new ApiError(httpStatus.NOT_FOUND, "Attempt not found");
@@ -145,7 +146,13 @@ const start = async (
   return attempt;
 };
 const autoSubmitIfExpired = async (attemptId: string) => {
-  const attempt = await prisma.attempt.findUnique({ where: { id: attemptId } });
+  const attempt = await prisma.attempt.findUnique({
+    where: { id: attemptId },
+    include: {
+      assessment: true,
+      answers: true,
+    },
+  });
   if (!attempt) return attempt;
   if (
     attempt.status === AttemptStatus.IN_PROGRESS &&
@@ -157,6 +164,10 @@ const autoSubmitIfExpired = async (attemptId: string) => {
       data: {
         status: AttemptStatus.AUTO_SUBMITTED,
         submittedAt: new Date(),
+      },
+      include: {
+        assessment: true,
+        answers: true,
       },
     });
   }

@@ -53,6 +53,11 @@ export const adminApi = {
       params: compactParams({ ...(params ?? {}) }),
     }),
 
+  updateAssessmentAiProctoring: (id: string, aiProctoringEnabled: boolean) =>
+    apiPatch<Assessment>(`${endpoints.admin.assessments}/${id}/ai-proctoring`, {
+      aiProctoringEnabled,
+    }),
+
   /* ---- problems ---- */
 
   problems: (params?: ListParams & { type?: string; difficulty?: string }) =>

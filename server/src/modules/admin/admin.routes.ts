@@ -3,6 +3,7 @@ import { AdminController } from "./admin.controller";
 import auth from "../../middlewares/auth";
 import { validate } from "../../middlewares/validate";
 import {
+  adminAssessmentAiProctoringSchema,
   adminAuditQuerySchema,
   adminListQuerySchema,
   adminUserParamsSchema,
@@ -37,6 +38,12 @@ router.get(
   "/assessments",
   validate(adminListQuerySchema),
   AdminController.listAssessments,
+);
+
+router.patch(
+  "/assessments/:id/ai-proctoring",
+  validate(adminAssessmentAiProctoringSchema),
+  AdminController.updateAssessmentAiProctoring,
 );
 
 router.get("/payments", validate(adminListQuerySchema), AdminController.listPayments);

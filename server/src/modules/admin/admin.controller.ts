@@ -98,6 +98,20 @@ const listAssessments = catchAsync(async (req: AuthRequest, res: Response) => {
   });
 });
 
+const updateAssessmentAiProctoring = catchAsync(async (req: AuthRequest, res: Response) => {
+  const result = await AdminServices.updateAssessmentAiProctoring(
+    req.user!,
+    String(req.params.id),
+    Boolean(req.body.aiProctoringEnabled),
+    { ip: req.ip, userAgent: req.headers["user-agent"] },
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    message: `AI Proctoring ${req.body.aiProctoringEnabled ? "enabled" : "disabled"} successfully`,
+    data: result,
+  });
+});
+
 const listPayments = catchAsync(async (req: AuthRequest, res: Response) => {
   const { page, limit } = paginate(Number(req.query.page), Number(req.query.limit));
   const result = await AdminServices.listPayments({
@@ -162,6 +176,7 @@ export const AdminController = {
   updateUserRole,
   listCompanies,
   listAssessments,
+  updateAssessmentAiProctoring,
   listPayments,
   dashboardStats,
   listAuditLogs,

@@ -147,6 +147,7 @@ const updateUserRole = async (
 
   return updated;
 };
+
 const listCompanies = async (query: { page?: number; limit?: number; q?: string }) => {
   const page = Math.max(Number(query.page) || 1, 1);
   const limit = Math.min(Math.max(Number(query.limit) || 10, 1), 100);
@@ -208,6 +209,46 @@ const listAssessments = async (query: {
   };
 };
 
+const updateAssessmentAiProctoring = async (
+  adminUser: IAuthUser,
+  id: string,
+  aiProctoringEnabled: boolean,
+  meta: { ip?: string; userAgent?: string },
+) => {
+  const assessment = await prisma.assessment.findUnique({ where: { id } });
+  if (!assessment) throw new ApiError(httpStatus.NOT_FOUND, "Assessment not found");
+
+  const currentConfig = (assessment.questionConfig as Record<string, unknown>) || {};
+  const updatedConfig = {
+    ...currentConfig,
+    aiProctoringEnabled,
+  };
+
+  const updated = await prisma.assessment.update({
+    where: { id },
+    data: {
+      questionConfig: updatedConfig,
+    },
+    include: {
+      company: { select: { id: true, name: true } },
+      _count: { select: { attempts: true, problems: true } },
+    },
+  });
+
+  await writeAuditLog({
+    actorId: adminUser.id,
+    action: `assessment.ai_proctoring.${aiProctoringEnabled ? "enable" : "disable"}`,
+    entityType: "Assessment",
+    entityId: id,
+    previousValue: currentConfig,
+    newValue: updatedConfig,
+    ipAddress: meta.ip,
+    userAgent: meta.userAgent,
+  });
+
+  return updated;
+};
+
 const listPayments = async (query: {
   page?: number;
   limit?: number;
@@ -237,6 +278,7 @@ const listPayments = async (query: {
     meta: { page, limit, total, totalPages: Math.ceil(total / limit) || 1 },
   };
 };
+
 const dashboardStats = async () => {
   const [
     totalUsers,
@@ -370,6 +412,7 @@ export const AdminServices = {
   updateUserRole,
   listCompanies,
   listAssessments,
+  updateAssessmentAiProctoring,
   listPayments,
   dashboardStats,
   listAuditLogs,

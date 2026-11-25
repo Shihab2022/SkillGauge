@@ -7,6 +7,7 @@ import {
 } from "@/hooks/useAttempts";
 import { useAttemptTimer } from "@/hooks/useAttemptTimer";
 import { useAntiCheatingMonitor } from "@/hooks/useAntiCheatingMonitor";
+import { AttemptProctorHud } from "./AttemptProctorHud";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Progress, Spinner } from "@/components/ui/Primitives";
@@ -52,6 +53,9 @@ export function AttemptRunner({ attemptId }: { attemptId: string }) {
   const [hydrated, setHydrated] = useState(false);
 
   const assessment = attempt?.assessment;
+  const isAiProctored = Boolean(
+    (assessment?.questionConfig as Record<string, unknown> | undefined)?.aiProctoringEnabled
+  );
   const monitor = useAntiCheatingMonitor(attemptId, {
     enabled: Boolean(attempt?.status === "IN_PROGRESS"),
     antiCheatingEnabled: assessment?.antiCheatingEnabled ?? true,
@@ -159,6 +163,15 @@ export function AttemptRunner({ attemptId }: { attemptId: string }) {
             </p>
           </div>
           <div className="flex items-center gap-4">
+            {isAiProctored && (
+              <span className="hidden items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 sm:flex">
+                <span className="relative flex size-2">
+                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex size-2 rounded-full bg-emerald-500"></span>
+                </span>
+                AI Proctoring Active
+              </span>
+            )}
             <div
               className={cn(
                 "text-xl font-bold tabular-nums",
@@ -286,6 +299,11 @@ export function AttemptRunner({ attemptId }: { attemptId: string }) {
           Next
         </Button>
       </div>
+
+      <AttemptProctorHud
+        attemptId={attemptId}
+        enabled={isAiProctored && attempt?.status === "IN_PROGRESS"}
+      />
     </div>
   );
 }

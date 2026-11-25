@@ -104,3 +104,25 @@ export function useUpdateUserRole() {
     onError: (error) => toast.error(getErrorMessage(error)),
   });
 }
+
+export function useUpdateAssessmentAiProctoring() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      aiProctoringEnabled,
+    }: {
+      id: string;
+      aiProctoringEnabled: boolean;
+    }) => adminApi.updateAssessmentAiProctoring(id, aiProctoringEnabled),
+    onSuccess: (updated) => {
+      queryClient.invalidateQueries({ queryKey: ["admin"] });
+      const config = (updated.questionConfig as Record<string, unknown>) ?? {};
+      const enabled = Boolean(config.aiProctoringEnabled);
+      toast.success(
+        `AI Proctoring ${enabled ? "enabled" : "disabled"} for ${updated.title}`,
+      );
+    },
+    onError: (error) => toast.error(getErrorMessage(error)),
+  });
+}
